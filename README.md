@@ -1,39 +1,108 @@
-# JaxEnv
+<p align="center">
+  <a href="docs/images/stoa.png">
+    <img src="docs/images/stoa.jpeg" alt="Stoa logo" width="30%"/>
+  </a>
+</p>
 
-JaxEnv provides a flexible and powerful JAX-native API for reinforcement learning environments, inspired by `dm_env`. It is designed from the ground up to leverage JAX's functional and differentiable programming paradigms, offering several utilities for modern RL research and development. While still under active development, the core API and several key features are taking shape.
+<div align="center">
+  <a href="https://www.python.org/doc/versions/">
+    <img src="https://img.shields.io/badge/python-3.10-blue" alt="Python Versions"/>
+  </a>
+  <a href="https://github.com/your-org/stoa/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/License-Apache%202.0-orange" alt="License"/>
+  </a>
+  <a href="https://github.com/psf/black">
+    <img src="https://img.shields.io/badge/code%20style-black-000000" alt="Code Style"/>
+  </a>
+  <a  href="http://mypy-lang.org/">
+    <img src="https://www.mypy-lang.org/static/mypy_badge.svg" alt="MyPy" />
+</a>
+</div>
 
-## Overview
+<h2 align="center">
+  <p>A JAX-native, Functional Interface for Reinforcement Learning Environments</p>
+</h2>
 
-The primary goal of JaxEnv is to serve as a robust interface layer for integrating various environment implementations within the JAX ecosystem. It aims to provide a familiar yet improved experience compared to existing APIs, with first-class support for features essential for modern RL experimentation.
+## 🚀 Welcome to **Stoa**
 
-## Key Features (In Progress)
+Stoa is a lightweight, flexible, and fully JAX‑native API for RL environments—heavily inspired by `dm_env`. It offers a pure‑functional interface that aligns seamlessly with `jit`, `vmap`, and `grad`, enabling efficient experimentation and environment integration in JAX.
 
-*   **JAX Native:** Fully compatible with JAX transformations like `jit`, `vmap`, and `grad`.
-*   **Stateless `step` Function:** Purely functional step transitions suitable for JAX's programming model.
-*   **Automatic Episode Resets:** Designed to handle episode termination and resetting natively.
-*   **Enhanced Truncation Support:** More natural handling of episode truncation signals compared to traditional APIs.
-*   **Structured State Spaces:** Exploring ways to define and utilize structured environment states, potentially integrated with resets.
-*   **Procedural Generation Ready:** Built-in considerations for procedurally generated environments (inspired by [jaxued](https://github.com/DramaCow/jaxued/blob/main/src/jaxued/environments/underspecified_env.py)).
-*   **Flexible Spaces:** Adaptable observation and reward space definitions.
-*   **Differentiable Operations:** Core `step` and `reset` operations are designed with differentiability in mind.
-*   **Wrapper Ecosystem:** Built for wrapper compatibility and aims to include a suite of commonly used wrappers, reducing boilerplate.
-*   **Tools:** Planning to include useful tools alongside the core API.
+> ⚠️ **Work in progress** – core abstractions and utilities are shaping up fast!
 
-## Getting Started
+---
 
-*(Placeholder)* Installation instructions and basic usage examples will be added as the library matures.
+## 🎯 What Makes Stoa Useful
 
-## Wrappers
+* **Fully Functional API**
+  Stateless `step` and `reset` operations designed for composability and JAX transformations.
 
-JaxEnv will include several useful wrappers commonly needed in RL workflows, saving users from rewriting them. Details on available wrappers will be documented here.
+* **First-class JAX Compatibility**
+  Use `jit`, `vmap`, and even `grad` over environment interactions and dynamics.
 
-## Roadmap / Future Work
+* **Auto-resets & Truncation Signals**
+  Native episode restart logic and cleaner support for early termination.
 
-*   Solidify the core Environment API.
-*   Implement and test essential wrappers.
-*   Develop example environments demonstrating the API usage.
-*   Integrate with libraries like [Stoix](https://github.com/InstaDeepAI/Stoix) (potentially replacing Jumanji usage).
-*   Refine API design based on usage and feedback.
-*   Expand tooling and utilities.
+* **Structured States & Spaces**
+  Designed to work with nested/structured states and custom observation/reward spaces.
 
-Contributions are welcome!
+* **Procedural‑Ready**
+  Built with procedurally generated environments in mind.
+
+* **Differentiable Environment Ops**
+  Core functions are differentiable to support model-based methods and environment gradients.
+
+* **Wrapper Ecosystem**
+  Support for standard wrappers—reduction of boilerplate and easy composition.
+
+
+## ⚡ Quickstart
+
+1. **Install Stoa**
+   *(installation instructions coming soon)*
+
+2. **Sketch an environment loop**
+
+   ```python
+   import jax
+   from stoa import Env, reset, step
+
+   @jax.jit
+   def run_episode(params, rng):
+       env_state = reset(Env(), rng)
+       def body(carry, _):
+           state, rng = carry
+           action = policy(params, state.obs)
+           next_state = step(Env(), state, action)
+           return (next_state, rng), next_state.reward
+       (_, _), rewards = jax.lax.scan(body, (env_state, rng), None, length=1000)
+       return rewards.sum()
+   ```
+
+3. **Layer on wrappers**
+   Add observation normalization, frame stacking, etc., via native wrappers.
+
+4. **Optimize transforms**
+   Wrap loops with `jit`, batch across environments with `vmap`, or distribute via `pmap`.
+
+---
+
+## 🛣️ Roadmap & Growth
+
+* ✅ Define and solidify core abstractions (`Env`, `step`, `reset`, spaces)
+* 🚧 Build and test essential wrappers for utility and popular environment suites.
+* 🏞️ Provide example/procedural environments
+* 🔄 Integrate with Stoix.
+* 🏁 Iterate API based on community feedback
+
+---
+
+## 🤝 Contributions Welcome
+
+We’re building Stoa to evolve with the needs of modern RL research. Issues, PRs, ideas—**all welcome**!
+
+---
+
+### 📚 Related Projects
+
+* **Stoix** – distributed single-agent RL in JAX
+* **Jumanji**, **Gymnax**, **Brax** – JAX-native environment suites
