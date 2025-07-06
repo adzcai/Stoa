@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/python-3.10-blue" alt="Python Versions"/>
   </a>
   <a href="https://github.com/your-org/stoa/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-Apache%202.0-orange" alt="License"/>
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"/>
   </a>
   <a href="https://github.com/psf/black">
     <img src="https://img.shields.io/badge/code%20style-black-000000" alt="Code Style"/>

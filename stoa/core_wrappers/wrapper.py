@@ -46,7 +46,7 @@ class WrapperState:
             raise AttributeError(f"{name} not found in WrapperState or base_env_state") from e
 
 
-S = TypeVar("S", bound="WrapperState")
+S = TypeVar("S", bound="State")
 
 
 class Wrapper(Environment, Generic[S]):

@@ -8,8 +8,9 @@ from chex import PRNGKey
 from gymnax import EnvParams as GymnaxEnvParams
 from gymnax.environments.environment import Environment as GymnaxEnvironment
 
-from stoa.core_wrappers.wrapper import AddRNGKey, StateWithKey
+from stoa.core_wrappers.wrapper import StateWithKey
 from stoa.env_types import Action, EnvParams, StepType, TimeStep
+from stoa.environment import Environment
 from stoa.spaces import ArraySpace, BoundedArraySpace, DictSpace, DiscreteSpace, Space
 
 
@@ -58,21 +59,21 @@ def gymnax_space_to_stoa_space(
         raise TypeError(f"Unsupported Gymnax space type: {type(space)}")
 
 
-class GymnaxWrapper(AddRNGKey):
-    """Gymnax Wrapper"""
+class GymnaxToStoa(Environment):
+    """Gymnax environments in stoa interface."""
 
     def __init__(
         self,
         env: GymnaxEnvironment,
         env_params: Optional[GymnaxEnvParams] = None,
     ):
-        """Initialize the Gymnax wrapper.
+        """Initialize the Gymnax adapter.
 
         Args:
-            env: The Gymnax environment to wrap.
+            env: The Gymnax environment to adapt.
             env_params: Optional environment parameters.
         """
-        self._gymnax_env = env
+        self._env = env
         self._env_params = env_params or env.default_params
 
     def reset(
@@ -86,7 +87,7 @@ class GymnaxWrapper(AddRNGKey):
             env_params = self._env_params
 
         # Reset the gymnax environment
-        obs, gymnax_state = self._gymnax_env.reset(reset_key, env_params)
+        obs, gymnax_state = self._env.reset(reset_key, env_params)
 
         # Wrap the state with an rng key
         state = StateWithKey(
@@ -97,8 +98,8 @@ class GymnaxWrapper(AddRNGKey):
         # Create the timestep
         timestep = TimeStep(
             step_type=StepType.FIRST,
-            reward=jnp.array(0.0, dtype=jnp.float32),
-            discount=jnp.array(1.0, dtype=jnp.float32),
+            reward=jnp.array(0.0, dtype=float),
+            discount=jnp.array(1.0, dtype=float),
             observation=obs,
             extras={},
         )
@@ -118,18 +119,18 @@ class GymnaxWrapper(AddRNGKey):
         if env_params is None:
             env_params = self._env_params
 
-        # Take a real gymnax step
-        obs, gymnax_state, reward, done, info = self._gymnax_env.step(
+        # Take a gymnax step
+        obs, gymnax_state, reward, done, info = self._env.step(
             step_key, state.base_env_state, action, env_params
         )
 
-        # Wrap the state with a key
+        # Wrap the state with a new key
         new_state = StateWithKey(
             base_env_state=gymnax_state,
             rng_key=next_key,
         )
 
-        # Gymnax has no truncation
+        # Gymnax has no truncation, only termination
         step_type = jax.lax.select(done, StepType.TERMINATED, StepType.MID)
 
         # Create the timestep
@@ -147,14 +148,14 @@ class GymnaxWrapper(AddRNGKey):
         """Get the observation space."""
         if env_params is None:
             env_params = self._env_params
-        gymnax_obs_space = self._gymnax_env.observation_space(env_params)
+        gymnax_obs_space = self._env.observation_space(env_params)
         return gymnax_space_to_stoa_space(gymnax_obs_space)
 
     def action_space(self, env_params: Optional[EnvParams] = None) -> Space:
         """Get the action space."""
         if env_params is None:
             env_params = self._env_params
-        gymnax_action_space = self._gymnax_env.action_space(env_params)
+        gymnax_action_space = self._env.action_space(env_params)
         return gymnax_space_to_stoa_space(gymnax_action_space)
 
     def state_space(self, env_params: Optional[EnvParams] = None) -> Space:
@@ -165,22 +166,18 @@ class GymnaxWrapper(AddRNGKey):
     def reward_space(self, env_params: Optional[EnvParams] = None) -> BoundedArraySpace:
         """Get the reward space."""
         return BoundedArraySpace(
-            shape=(), dtype=jnp.float32, minimum=-jnp.inf, maximum=jnp.inf, name="reward"
+            shape=(), dtype=float, minimum=-jnp.inf, maximum=jnp.inf, name="reward"
         )
 
     def discount_space(self, env_params: Optional[EnvParams] = None) -> BoundedArraySpace:
         """Get the discount space."""
-        return BoundedArraySpace(
-            shape=(), dtype=jnp.float32, minimum=0.0, maximum=1.0, name="discount"
-        )
+        return BoundedArraySpace(shape=(), dtype=float, minimum=0.0, maximum=1.0, name="discount")
 
     def render(self, state: StateWithKey, env_params: Optional[EnvParams] = None) -> Any:
         """Render the environment."""
         if env_params is None:
             env_params = self._env_params
-        if hasattr(self._gymnax_env, "render"):
-            return self._gymnax_env.render(state.base_env_state, env_params)
+        if hasattr(self._env, "render"):
+            return self._env.render(state.base_env_state, env_params)
         else:
-            raise NotImplementedError(
-                f"Rendering not supported for {self._gymnax_env.__class__.__name__}"
-            )
+            raise NotImplementedError(f"Rendering not supported for {self._env.__class__.__name__}")
