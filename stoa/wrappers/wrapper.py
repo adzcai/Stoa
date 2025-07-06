@@ -165,7 +165,7 @@ class StateWithKey(WrapperState):
     rng_key: PRNGKey
 
 
-class AddRNGKey(Wrapper):
+class AddRNGKey(Wrapper[StateWithKey]):
     """
     Wrapper that adds a JAX PRNG key to the environment state.
 

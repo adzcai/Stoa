@@ -1,3 +1,4 @@
+from dataclasses import field
 from typing import TYPE_CHECKING, Dict, TypeAlias
 
 import jax.numpy as jnp
@@ -39,7 +40,7 @@ class TimeStep:
     reward: Reward
     discount: Discount
     observation: Observation
-    extras: TimeStepExtras = {}
+    extras: TimeStepExtras = field(default_factory=dict)
 
     def first(self) -> Array:
         return self.step_type == StepType.FIRST
