@@ -20,7 +20,7 @@
 </div>
 
 <h2 align="center">
-  <p>A JAX-native, Functional Interface for Reinforcement Learning Environments</p>
+  <p>Reinforcement Learning Environments in JAX</p>
 </h2>
 
 ## 🚀 Welcome to **Stoa**
