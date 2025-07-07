@@ -45,6 +45,21 @@ class WrapperState:
         except AttributeError as e:
             raise AttributeError(f"{name} not found in WrapperState or base_env_state") from e
 
+    @property
+    def unwrapped_state(self) -> State:
+        """Get the deepest non-wrapper state."""
+        current = self.base_env_state
+        while isinstance(current, WrapperState):
+            current = current.base_env_state
+        return current
+
+    @property
+    def depth(self) -> int:
+        """How many wrappers deep are we?"""
+        if isinstance(self.base_env_state, WrapperState):
+            return 1 + self.base_env_state.depth
+        return 1
+
 
 S = TypeVar("S", bound="State")
 

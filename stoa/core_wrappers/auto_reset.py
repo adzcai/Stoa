@@ -3,9 +3,9 @@ from typing import Optional, Tuple
 import jax
 from chex import PRNGKey
 
+from stoa.core_wrappers.wrapper import Wrapper
 from stoa.env_types import Action, EnvParams, State, TimeStep
 from stoa.environment import Environment
-from stoa.wrappers.wrapper import Wrapper
 
 NEXT_OBS_KEY_IN_EXTRAS = "next_obs"
 
@@ -67,7 +67,8 @@ class AutoResetWrapper(Wrapper[State]):
         if not hasattr(state, "key"):
             raise ValueError(
                 f"AutoResetWrapper requires environment state to have a 'key' attribute "
-                f"for generating randomness during auto-reset. Got state type: {type(state)}"
+                f"for generating randomness during auto-reset. Got state type: {type(state)}."
+                f"Consider using the AddRNGKey wrapper to add a key to the state."
             )
 
     def _auto_reset(self, state: State, timestep: TimeStep) -> Tuple[State, TimeStep]:
