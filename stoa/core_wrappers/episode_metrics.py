@@ -5,8 +5,8 @@ import jax.numpy as jnp
 from chex import Numeric, PRNGKey
 from jax import Array
 
+from stoa.core_wrappers.wrapper import Wrapper, WrapperState
 from stoa.env_types import Action, EnvParams, TimeStep
-from stoa.wrappers.wrapper import StateWithKey, Wrapper
 
 if TYPE_CHECKING:  # https://github.com/python/mypy/issues/6239
     from dataclasses import dataclass
@@ -15,7 +15,9 @@ else:
 
 
 @dataclass
-class RecordEpisodeMetricsState(StateWithKey):
+class RecordEpisodeMetricsState(WrapperState):
+    """State for tracking episode metrics without needing RNG key."""
+
     # Temporary variables to keep track of the episode return and length.
     running_count_episode_return: Numeric
     running_count_episode_length: Numeric
@@ -48,22 +50,24 @@ class RecordEpisodeMetrics(Wrapper[RecordEpisodeMetricsState]):
         Returns:
             A tuple containing the initial state and the first TimeStep, with episode metrics initialized.
         """
-        rng_key, reset_key = jax.random.split(rng_key)
-        base_env_state, timestep = self._env.reset(reset_key, env_params)
+        base_env_state, timestep = self._env.reset(rng_key, env_params)
         state = RecordEpisodeMetricsState(
-            base_env_state,
-            rng_key,
-            jnp.array(0.0, dtype=jnp.float32),
-            jnp.array(0, dtype=jnp.int32),
-            jnp.array(0.0, dtype=jnp.float32),
-            jnp.array(0, dtype=jnp.int32),
+            base_env_state=base_env_state,
+            running_count_episode_return=jnp.array(0.0, dtype=jnp.float32),
+            running_count_episode_length=jnp.array(0, dtype=jnp.int32),
+            episode_return=jnp.array(0.0, dtype=jnp.float32),
+            episode_length=jnp.array(0, dtype=jnp.int32),
         )
         episode_metrics = {
             "episode_return": jnp.array(0.0, dtype=jnp.float32),
             "episode_length": jnp.array(0, dtype=jnp.int32),
             "is_terminal_step": jnp.array(False, dtype=bool),
         }
-        timestep.extras["episode_metrics"] = episode_metrics
+
+        # Create new extras dict to avoid modifying the original
+        new_extras = {**timestep.extras, "episode_metrics": episode_metrics}
+        timestep = timestep.replace(extras=new_extras)  # type: ignore
+
         return state, timestep
 
     def step(
@@ -102,17 +106,19 @@ class RecordEpisodeMetrics(Wrapper[RecordEpisodeMetricsState]):
             "episode_length": episode_length_info,
             "is_terminal_step": done,
         }
-        timestep.extras["episode_metrics"] = episode_metrics
 
-        state = RecordEpisodeMetricsState(
+        # Create new extras dict to avoid modifying the original
+        new_extras = {**timestep.extras, "episode_metrics": episode_metrics}
+        timestep = timestep.replace(extras=new_extras)  # type: ignore
+
+        new_state = RecordEpisodeMetricsState(
             base_env_state=base_env_state,
-            rng_key=state.rng_key,
             running_count_episode_return=new_episode_return * not_done,
             running_count_episode_length=new_episode_length * not_done,
             episode_return=episode_return_info,
             episode_length=episode_length_info,
         )
-        return state, timestep
+        return new_state, timestep
 
 
 def get_final_step_metrics(metrics: Dict[str, Array]) -> Tuple[Dict[str, Array], bool]:
