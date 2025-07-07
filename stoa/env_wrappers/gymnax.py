@@ -161,7 +161,7 @@ class GymnaxToStoa(Environment):
     def state_space(self, env_params: Optional[EnvParams] = None) -> Space:
         """Get the state space."""
         raise NotImplementedError(
-            "Gymnax environments do not have a separate state space. Use observation_space instead."
+            "Gymnax does not expose a state space. Use observation_space instead."
         )
 
     def render(self, state: StateWithKey, env_params: Optional[EnvParams] = None) -> Any:

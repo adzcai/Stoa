@@ -137,7 +137,7 @@ class XMiniGridToStoa(Environment):
             A generic space for the XMiniGrid state.
         """
         raise NotImplementedError(
-            "XMiniGrid does not expose a generic state space. Use observation_space instead."
+            "XMiniGrid does not expose a state space. Use observation_space instead."
         )
 
     def render(self, state: XMiniGridState, env_params: Optional[EnvParams] = None) -> Any:

@@ -113,7 +113,7 @@ class JumanjiToStoa(Environment):
     def state_space(self, env_params: Optional[EnvParams] = None) -> Space:
         """Get the state space."""
         raise NotImplementedError(
-            "Jumanji environments do not have a separate state space. Use observation_space instead."
+            "Jumanji does not expose a state space. Use observation_space instead."
         )
 
     def render(self, state: Any, env_params: Optional[EnvParams] = None) -> Any:
