@@ -114,26 +114,6 @@ class BraxToStoa(Environment):
             name="brax_state",
         )
 
-    def reward_space(self, env_params: Optional[EnvParams] = None) -> BoundedArraySpace:
-        """Get the reward space."""
-        return BoundedArraySpace(
-            shape=(),
-            dtype=jnp.float32,
-            minimum=-jnp.inf,
-            maximum=jnp.inf,
-            name="reward",
-        )
-
-    def discount_space(self, env_params: Optional[EnvParams] = None) -> BoundedArraySpace:
-        """Get the discount space."""
-        return BoundedArraySpace(
-            shape=(),
-            dtype=jnp.float32,
-            minimum=0.0,
-            maximum=1.0,
-            name="discount",
-        )
-
     def render(self, state: BraxState, env_params: Optional[EnvParams] = None) -> Any:
         """Render the environment."""
         if hasattr(self._env, "render"):

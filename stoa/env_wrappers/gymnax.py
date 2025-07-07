@@ -74,7 +74,7 @@ class GymnaxToStoa(Environment):
             env_params: Optional environment parameters.
         """
         self._env = env
-        self._env_params = env_params or env.default_params
+        self._env_params: GymnaxEnvParams = env_params or env.default_params
 
     def reset(
         self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
@@ -162,16 +162,6 @@ class GymnaxToStoa(Environment):
         """Get the state space."""
         # Just return a generic space since Gymnax state structure varies
         return ArraySpace(shape=(), dtype=jnp.int32, name="gymnax_state")
-
-    def reward_space(self, env_params: Optional[EnvParams] = None) -> BoundedArraySpace:
-        """Get the reward space."""
-        return BoundedArraySpace(
-            shape=(), dtype=float, minimum=-jnp.inf, maximum=jnp.inf, name="reward"
-        )
-
-    def discount_space(self, env_params: Optional[EnvParams] = None) -> BoundedArraySpace:
-        """Get the discount space."""
-        return BoundedArraySpace(shape=(), dtype=float, minimum=0.0, maximum=1.0, name="discount")
 
     def render(self, state: StateWithKey, env_params: Optional[EnvParams] = None) -> Any:
         """Render the environment."""

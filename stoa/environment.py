@@ -26,14 +26,12 @@ class Environment:
         """Updates the environment according to the agent's action."""
         pass
 
-    @abc.abstractmethod
     def reward_space(self, env_params: Optional[EnvParams] = None) -> BoundedArraySpace:
         """Describes the reward returned by the environment."""
         return BoundedArraySpace(
             shape=(), dtype=float, minimum=-jnp.inf, maximum=jnp.inf, name="reward"
         )
 
-    @abc.abstractmethod
     def discount_space(self, env_params: Optional[EnvParams] = None) -> BoundedArraySpace:
         """Describes the discount returned by the environment."""
         return BoundedArraySpace(shape=(), dtype=float, minimum=0.0, maximum=1.0, name="discount")
