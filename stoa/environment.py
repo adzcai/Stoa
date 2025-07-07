@@ -29,12 +29,14 @@ class Environment:
     def reward_space(self, env_params: Optional[EnvParams] = None) -> BoundedArraySpace:
         """Describes the reward returned by the environment."""
         return BoundedArraySpace(
-            shape=(), dtype=float, minimum=-jnp.inf, maximum=jnp.inf, name="reward"
+            shape=(), dtype=jnp.float32, minimum=-jnp.inf, maximum=jnp.inf, name="reward"
         )
 
     def discount_space(self, env_params: Optional[EnvParams] = None) -> BoundedArraySpace:
         """Describes the discount returned by the environment."""
-        return BoundedArraySpace(shape=(), dtype=float, minimum=0.0, maximum=1.0, name="discount")
+        return BoundedArraySpace(
+            shape=(), dtype=jnp.float32, minimum=0.0, maximum=1.0, name="discount"
+        )
 
     @abc.abstractmethod
     def observation_space(self, env_params: Optional[EnvParams] = None) -> Space:

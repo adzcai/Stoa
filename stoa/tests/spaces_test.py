@@ -26,7 +26,7 @@ class ArraySpaceTest(parameterized.TestCase):
     @chex.all_variants()
     def test_dtype(self) -> None:
         sample = self.variant(self.space.sample)(self.rng_key)
-        self.assertEqual(sample.dtype, jnp.float32)
+        self.assertEqual(sample.dtype, float)
 
 
 class DiscreteSpaceTest(parameterized.TestCase):
@@ -51,7 +51,7 @@ class DictSpaceTest(parameterized.TestCase):
         super().setUp()
         self.space = spaces.DictSpace(
             {
-                "pos": spaces.ArraySpace((2,), jnp.float32),
+                "pos": spaces.ArraySpace((2,), float),
                 "id": spaces.DiscreteSpace(10),
             }
         )
@@ -82,7 +82,7 @@ class BoundedArraySpaceTest(parameterized.TestCase):
         sample = self.variant(self.space.sample)(self.rng_key)
         self.assertTrue(jnp.all(sample >= 0.0) and jnp.all(sample <= 1.0))
         self.assertEqual(sample.shape, (2, 2))
-        self.assertEqual(sample.dtype, jnp.float32)
+        self.assertEqual(sample.dtype, float)
 
     def test_contains(self) -> None:
         self.assertTrue(self.space.contains(jnp.array([[0.5, 0.0], [1.0, 0.7]], dtype=jnp.float32)))
@@ -138,7 +138,7 @@ class TupleSpaceTest(parameterized.TestCase):
         self.space = spaces.TupleSpace(
             [
                 spaces.DiscreteSpace(2),
-                spaces.ArraySpace((2,), jnp.float32),
+                spaces.ArraySpace((2,), float),
             ]
         )
         self.rng_key = jax.random.PRNGKey(np.random.randint(0, 1000000))
@@ -159,7 +159,7 @@ class TupleSpaceTest(parameterized.TestCase):
         s2 = spaces.TupleSpace(
             [
                 spaces.DiscreteSpace(2),
-                spaces.ArraySpace((2,), jnp.float32),
+                spaces.ArraySpace((2,), float),
             ]
         )
         self.assertEqual(self.space, s2)
@@ -198,7 +198,7 @@ class PyTreeTest(parameterized.TestCase):
     def test_tuplespace_pytree(self) -> None:
         import jax
 
-        s = spaces.TupleSpace([spaces.DiscreteSpace(2), spaces.ArraySpace((1,), jnp.float32)])
+        s = spaces.TupleSpace([spaces.DiscreteSpace(2), spaces.ArraySpace((1,), float)])
         leaves, treedef = jax.tree_util.tree_flatten(s)
         s2 = jax.tree_util.tree_unflatten(treedef, leaves)
         self.assertEqual(s, s2)
@@ -215,7 +215,7 @@ class NestedCompositeSpacesTest(parameterized.TestCase):
                         spaces.BoundedArraySpace((2,), minimum=0, maximum=1),
                     ]
                 ),
-                "array": spaces.ArraySpace((3,), jnp.float32),
+                "array": spaces.ArraySpace((3,), float),
             }
         )
 

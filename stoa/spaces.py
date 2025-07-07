@@ -92,7 +92,7 @@ class ArraySpace(Space[Array]):
     def __init__(
         self,
         shape: Union[int, Iterable[int]],
-        dtype: DTypeLike = jnp.float32,
+        dtype: DTypeLike = float,
         name: str = "",
     ) -> None:
         """Initializes a new `ArraySpace`.
@@ -190,7 +190,7 @@ class BoundedArraySpace(ArraySpace):
     def __init__(
         self,
         shape: Union[int, Iterable[int]],
-        dtype: DTypeLike = jnp.float32,
+        dtype: DTypeLike = float,
         minimum: Union[float, int, ArrayLike] = -jnp.inf,
         maximum: Union[float, int, ArrayLike] = jnp.inf,
         name: str = "",
@@ -320,7 +320,7 @@ class BoundedArraySpace(ArraySpace):
 class DiscreteSpace(BoundedArraySpace):
     """Describes a discrete scalar space with values from 0 to num_values-1."""
 
-    def __init__(self, num_values: int, dtype: DTypeLike = jnp.int32, name: str = "") -> None:
+    def __init__(self, num_values: int, dtype: DTypeLike = int, name: str = "") -> None:
         """Initializes a new `DiscreteSpace`.
 
         Args:
@@ -404,7 +404,7 @@ class MultiDiscreteSpace(BoundedArraySpace):
     def __init__(
         self,
         num_values: Union[Sequence[int], ArrayLike],
-        dtype: DTypeLike = jnp.int32,
+        dtype: DTypeLike = int,
         name: str = "",
     ) -> None:
         """Initializes a new `MultiDiscreteSpace`.
@@ -745,7 +745,7 @@ def make_continuous(
     shape: Union[int, Sequence[int]],
     low: ArrayLike = -1.0,
     high: ArrayLike = 1.0,
-    dtype: DTypeLike = jnp.float32,
+    dtype: DTypeLike = float,
 ) -> BoundedArraySpace:
     """Create a continuous (bounded float) space.
 
@@ -761,7 +761,7 @@ def make_continuous(
     return BoundedArraySpace(shape=shape, minimum=low, maximum=high, dtype=dtype)
 
 
-def make_discrete(num_values: int, dtype: DTypeLike = jnp.int32) -> DiscreteSpace:
+def make_discrete(num_values: int, dtype: DTypeLike = int) -> DiscreteSpace:
     """Create a discrete space.
 
     Args:

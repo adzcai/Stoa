@@ -53,14 +53,14 @@ class RecordEpisodeMetrics(Wrapper[RecordEpisodeMetricsState]):
         state = RecordEpisodeMetricsState(
             base_env_state,
             rng_key,
-            jnp.array(0.0, dtype=float),
-            jnp.array(0, dtype=int),
-            jnp.array(0.0, dtype=float),
-            jnp.array(0, dtype=int),
+            jnp.array(0.0, dtype=jnp.float32),
+            jnp.array(0, dtype=jnp.int32),
+            jnp.array(0.0, dtype=jnp.float32),
+            jnp.array(0, dtype=jnp.int32),
         )
         episode_metrics = {
-            "episode_return": jnp.array(0.0, dtype=float),
-            "episode_length": jnp.array(0, dtype=int),
+            "episode_return": jnp.array(0.0, dtype=jnp.float32),
+            "episode_length": jnp.array(0, dtype=jnp.int32),
             "is_terminal_step": jnp.array(False, dtype=bool),
         }
         timestep.extras["episode_metrics"] = episode_metrics

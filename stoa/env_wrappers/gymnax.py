@@ -98,8 +98,8 @@ class GymnaxToStoa(Environment):
         # Create the timestep
         timestep = TimeStep(
             step_type=StepType.FIRST,
-            reward=jnp.array(0.0, dtype=float),
-            discount=jnp.array(1.0, dtype=float),
+            reward=jnp.array(0.0, dtype=jnp.float32),
+            discount=jnp.array(1.0, dtype=jnp.float32),
             observation=obs,
             extras={},
         )
@@ -136,8 +136,8 @@ class GymnaxToStoa(Environment):
         # Create the timestep
         timestep = TimeStep(
             step_type=step_type,
-            reward=jnp.asarray(reward, dtype=float),
-            discount=jnp.asarray(1.0 - done, dtype=float),
+            reward=jnp.asarray(reward, dtype=jnp.float32),
+            discount=jnp.asarray(1.0 - done, dtype=jnp.float32),
             observation=obs,
             extras={**info},
         )
@@ -160,8 +160,9 @@ class GymnaxToStoa(Environment):
 
     def state_space(self, env_params: Optional[EnvParams] = None) -> Space:
         """Get the state space."""
-        # Just return a generic space since Gymnax state structure varies
-        return ArraySpace(shape=(), dtype=jnp.int32, name="gymnax_state")
+        raise NotImplementedError(
+            "Gymnax environments do not have a separate state space. Use observation_space instead."
+        )
 
     def render(self, state: StateWithKey, env_params: Optional[EnvParams] = None) -> Any:
         """Render the environment."""

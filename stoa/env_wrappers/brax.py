@@ -35,8 +35,8 @@ class BraxToStoa(Environment):
         # Create the initial timestep
         timestep = TimeStep(
             step_type=StepType.FIRST,
-            reward=jnp.array(0.0, dtype=float),
-            discount=jnp.array(1.0, dtype=float),
+            reward=jnp.array(0.0, dtype=jnp.float32),
+            discount=jnp.array(1.0, dtype=jnp.float32),
             observation=brax_state.obs,
             extras={**brax_state.info},
         )
@@ -105,13 +105,8 @@ class BraxToStoa(Environment):
 
     def state_space(self, env_params: Optional[EnvParams] = None) -> Space:
         """Get the state space."""
-        # Return a generic space since Brax state structure varies
-        return BoundedArraySpace(
-            shape=(),
-            dtype=jnp.float32,
-            minimum=-jnp.inf,
-            maximum=jnp.inf,
-            name="brax_state",
+        raise NotImplementedError(
+            "Brax environments do not have a separate state space. Use observation_space instead."
         )
 
     def render(self, state: BraxState, env_params: Optional[EnvParams] = None) -> Any:

@@ -41,11 +41,11 @@ class NavixToStoa(Environment):
         # Create Stoa timestep
         timestep = TimeStep(
             step_type=StepType.FIRST,
-            reward=jnp.array(0.0, dtype=float),
-            discount=jnp.array(1.0, dtype=float),
-            observation=navix_timestep.observation.astype(float),
+            reward=jnp.array(0.0, dtype=jnp.float32),
+            discount=jnp.array(1.0, dtype=jnp.float32),
+            observation=navix_timestep.observation.astype(jnp.float32),
             extras={
-                "step_count": navix_timestep.t.astype(int),
+                "step_count": navix_timestep.t.astype(jnp.int32),
                 **navix_timestep.info,  # Include any additional info from Navix
             },
         )
@@ -85,18 +85,18 @@ class NavixToStoa(Environment):
         # Discount is 0 for termination, 1 for truncation or continuation
         discount = jax.lax.select(
             terminal,
-            jnp.array(0.0, dtype=float),
-            jnp.array(1.0, dtype=float),
+            jnp.array(0.0, dtype=jnp.float32),
+            jnp.array(1.0, dtype=jnp.float32),
         )
 
         # Create Stoa timestep
         timestep = TimeStep(
             step_type=step_type,
-            reward=new_navix_timestep.reward.astype(float),
+            reward=new_navix_timestep.reward.astype(jnp.float32),
             discount=discount,
-            observation=new_navix_timestep.observation.astype(float),
+            observation=new_navix_timestep.observation.astype(jnp.float32),
             extras={
-                "step_count": new_navix_timestep.t.astype(int),
+                "step_count": new_navix_timestep.t.astype(jnp.int32),
                 **new_navix_timestep.info,  # Include any additional info from Navix
             },
         )
@@ -116,7 +116,7 @@ class NavixToStoa(Environment):
 
         return BoundedArraySpace(
             shape=navix_obs_space.shape,
-            dtype=float,
+            dtype=jnp.float32,
             minimum=navix_obs_space.minimum,
             maximum=navix_obs_space.maximum,
             name="observation",
@@ -133,7 +133,7 @@ class NavixToStoa(Environment):
         """
         return DiscreteSpace(
             num_values=self._n_actions,
-            dtype=int,
+            dtype=jnp.int32,
             name="action",
         )
 
@@ -146,13 +146,8 @@ class NavixToStoa(Environment):
         Returns:
             A generic space for the Navix state.
         """
-        # Return a generic space since Navix state structure is complex
-        return BoundedArraySpace(
-            shape=(),
-            dtype=int,
-            minimum=-jnp.inf,
-            maximum=jnp.inf,
-            name="navix_state",
+        raise NotImplementedError(
+            "Navix does not expose a state space. Use observation_space instead."
         )
 
     def render(self, state: NavixTimestep, env_params: Optional[EnvParams] = None) -> Any:

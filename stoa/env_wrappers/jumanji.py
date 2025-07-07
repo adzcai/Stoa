@@ -92,8 +92,8 @@ class JumanjiToStoa(Environment):
         # Create the Stoa timestep
         timestep = TimeStep(
             step_type=step_type,
-            reward=jnp.asarray(jumanji_timestep.reward, dtype=float),
-            discount=jnp.asarray(jumanji_timestep.discount, dtype=float),
+            reward=jnp.asarray(jumanji_timestep.reward, dtype=jnp.float32),
+            discount=jnp.asarray(jumanji_timestep.discount, dtype=jnp.float32),
             observation=jumanji_timestep.observation,
             extras=jumanji_timestep.extras,
         )
@@ -112,8 +112,9 @@ class JumanjiToStoa(Environment):
 
     def state_space(self, env_params: Optional[EnvParams] = None) -> Space:
         """Get the state space."""
-        # Return a generic space since Jumanji state structure varies
-        return ArraySpace(shape=(), dtype=jnp.int32, name="jumanji_state")
+        raise NotImplementedError(
+            "Jumanji environments do not have a separate state space. Use observation_space instead."
+        )
 
     def render(self, state: Any, env_params: Optional[EnvParams] = None) -> Any:
         """Render the environment."""
