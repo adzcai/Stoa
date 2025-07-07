@@ -4,7 +4,6 @@ import jax.numpy as jnp
 import numpy as np
 from chex import PRNGKey
 
-from stoa.core_wrappers.auto_reset import NEXT_OBS_KEY_IN_EXTRAS
 from stoa.core_wrappers.wrapper import Wrapper
 from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
@@ -58,19 +57,11 @@ class FlattenObservationWrapper(Wrapper[State]):
             timestep: The timestep to process.
 
         Returns:
-            Timestep with flattened observation and any next_obs in extras.
+            Timestep with flattened observation.
         """
         # Flatten main observation
         flattened_obs = self._flatten_observation(timestep.observation)
         new_timestep: TimeStep = timestep.replace(observation=flattened_obs)  # type: ignore
-
-        # Also flatten next_obs if present in extras (from AutoResetWrapper)
-        if NEXT_OBS_KEY_IN_EXTRAS in timestep.extras:
-            flattened_next_obs = self._flatten_observation(timestep.extras[NEXT_OBS_KEY_IN_EXTRAS])
-            new_extras = {**timestep.extras}
-            new_extras[NEXT_OBS_KEY_IN_EXTRAS] = flattened_next_obs
-            new_timestep: TimeStep = new_timestep.replace(extras=new_extras)  # type: ignore
-
         return new_timestep
 
     def reset(
