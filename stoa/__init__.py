@@ -29,7 +29,6 @@ from stoa.env_types import (
 # Environment adapters
 from stoa.env_wrappers.brax import BraxToStoa
 from stoa.env_wrappers.gymnax import GymnaxToStoa
-from stoa.env_wrappers.jaxmarl import JaxMarlToStoa
 from stoa.env_wrappers.jumanji import JumanjiToStoa
 from stoa.env_wrappers.kinetix import KinetixToStoa
 from stoa.env_wrappers.navix import NavixToStoa
@@ -114,7 +113,6 @@ __all__ = [
     # Environment adapters
     "BraxToStoa",
     "GymnaxToStoa",
-    "JaxMarlToStoa",
     "JumanjiToStoa",
     "NavixToStoa",
     "XMiniGridToStoa",
