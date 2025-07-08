@@ -268,23 +268,25 @@ class StepCountState(WrapperState):
 
 class AddStepCountWrapper(Wrapper[StepCountState]):
     """
-    Wrapper that adds step count to observations as a dictionary.
+    Wrapper that adds step count to observations or timestep extras.
 
-    Converts the observation to a dict with:
-    - "observation": original observation
-    - "step_count": current step count
+    Can either:
+    1. Convert observation to dict with step_count (default)
+    2. Add step_count to timestep.extras and keep original observation unchanged
     """
 
-    def __init__(self, env: Environment, obs_key: str = "observation"):
+    def __init__(self, env: Environment, obs_key: str = "observation", in_extras: bool = False):
         """
         Initialize the step count wrapper.
 
         Args:
             env: The environment to wrap.
-            obs_key: Key name for the original observation in the new observation dict.
+            obs_key: Key name for the original observation in the dict (only used if in_extras=False).
+            in_extras: If True, add step_count to timestep.extras instead of modifying observation.
         """
         super().__init__(env)
         self._obs_key = obs_key
+        self._in_extras = in_extras
 
     def reset(
         self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
@@ -298,13 +300,18 @@ class AddStepCountWrapper(Wrapper[StepCountState]):
             step_count=jnp.array(0, dtype=jnp.int32),
         )
 
-        # Create dict observation
-        dict_obs = {
-            self._obs_key: timestep.observation,
-            "step_count": state.step_count,
-        }
+        if self._in_extras:
+            # Add step count to extras, keep original observation
+            new_extras = {**timestep.extras, "step_count": state.step_count}
+            new_timestep = timestep.replace(extras=new_extras)  # type: ignore
+        else:
+            # Create dict observation
+            dict_obs = {
+                self._obs_key: timestep.observation,
+                "step_count": state.step_count,
+            }
+            new_timestep = timestep.replace(observation=dict_obs)  # type: ignore
 
-        new_timestep = timestep.replace(observation=dict_obs)  # type: ignore
         return state, new_timestep
 
     def step(
@@ -323,23 +330,34 @@ class AddStepCountWrapper(Wrapper[StepCountState]):
             step_count=new_step_count,
         )
 
-        # Create dict observation
-        dict_obs = {
-            self._obs_key: timestep.observation,
-            "step_count": new_step_count,
-        }
+        if self._in_extras:
+            # Add step count to extras, keep original observation
+            new_extras = {**timestep.extras, "step_count": new_step_count}
+            new_timestep = timestep.replace(extras=new_extras)  # type: ignore
+        else:
+            # Create dict observation
+            dict_obs = {
+                self._obs_key: timestep.observation,
+                "step_count": new_step_count,
+            }
+            new_timestep = timestep.replace(observation=dict_obs)  # type: ignore
 
-        new_timestep = timestep.replace(observation=dict_obs)  # type: ignore
         return new_state, new_timestep
 
     def observation_space(self, env_params: Optional[EnvParams] = None) -> Space:
-        """Get the dict observation space."""
+        """Get the observation space."""
         original_space = self._env.observation_space(env_params)
-        spaces = {
-            self._obs_key: original_space,
-            "step_count": ArraySpace(shape=(), dtype=jnp.int32, name="step_count"),
-        }
-        return DictSpace(spaces=spaces)
+
+        if self._in_extras:
+            # Step count is in extras, observation space unchanged
+            return original_space
+        else:
+            # Step count is in observation dict
+            spaces = {
+                self._obs_key: original_space,
+                "step_count": ArraySpace(shape=(), dtype=jnp.int32, name="step_count"),
+            }
+            return DictSpace(spaces=spaces)
 
 
 class AddActionMaskWrapper(Wrapper[State]):
