@@ -1,28 +1,16 @@
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import Optional, Tuple
 
 import jax
 import jax.numpy as jnp
 from chex import PRNGKey
-from jax import Array
 
-from stoa.core_wrappers.wrapper import Wrapper, WrapperState
+from stoa.core_wrappers.wrapper import Wrapper
 from stoa.env_types import Action, EnvParams, StepType, TimeStep
 from stoa.environment import Environment
-
-if TYPE_CHECKING:  # https://github.com/python/mypy/issues/6239
-    from dataclasses import dataclass
-else:
-    from flax.struct import dataclass
+from stoa.utility_wrappers.obs_transforms import StepCountState
 
 
-@dataclass
-class EpisodeStepLimitState(WrapperState):
-    """State for tracking episode step count and enforcing step limits."""
-
-    step_count: Array  # Current step count in the episode
-
-
-class EpisodeStepLimitWrapper(Wrapper[EpisodeStepLimitState]):
+class EpisodeStepLimitWrapper(Wrapper[StepCountState]):
     """
     Wrapper that enforces a maximum number of steps per episode.
 
@@ -57,7 +45,7 @@ class EpisodeStepLimitWrapper(Wrapper[EpisodeStepLimitState]):
 
     def reset(
         self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[EpisodeStepLimitState, TimeStep]:
+    ) -> Tuple[StepCountState, TimeStep]:
         """
         Reset the environment and initialize the step counter.
 
@@ -72,7 +60,7 @@ class EpisodeStepLimitWrapper(Wrapper[EpisodeStepLimitState]):
         base_state, timestep = self._env.reset(rng_key, env_params)
 
         # Create wrapper state with step counter initialized to 0
-        state = EpisodeStepLimitState(
+        state = StepCountState(
             base_env_state=base_state,
             step_count=jnp.array(0, dtype=jnp.int32),
         )
@@ -81,10 +69,10 @@ class EpisodeStepLimitWrapper(Wrapper[EpisodeStepLimitState]):
 
     def step(
         self,
-        state: EpisodeStepLimitState,
+        state: StepCountState,
         action: Action,
         env_params: Optional[EnvParams] = None,
-    ) -> Tuple[EpisodeStepLimitState, TimeStep]:
+    ) -> Tuple[StepCountState, TimeStep]:
         """
         Step the environment and check for step limit truncation.
 
@@ -119,7 +107,7 @@ class EpisodeStepLimitWrapper(Wrapper[EpisodeStepLimitState]):
         new_timestep = timestep.replace(step_type=new_step_type)  # type: ignore
 
         # Create new wrapper state
-        new_state = EpisodeStepLimitState(
+        new_state = StepCountState(
             base_env_state=new_base_state,
             step_count=new_step_count,
         )

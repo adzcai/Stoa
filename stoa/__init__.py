@@ -61,10 +61,14 @@ from stoa.utility_wrappers.frame_stacking import FrameStackingWrapper
 
 # Observation wrappers
 from stoa.utility_wrappers.obs_extract import ObservationExtractWrapper
-from stoa.utility_wrappers.obs_space_transforms import (
+from stoa.utility_wrappers.obs_transforms import (
+    AddActionMaskWrapper,
     AddStartFlagAndPrevAction,
+    AddStepCountWrapper,
     MakeChannelLast,
+    ObservationTypeWrapper,
 )
+from stoa.utility_wrappers.step_limit import EpisodeStepLimitWrapper
 
 __all__ = [
     # Version
@@ -107,6 +111,11 @@ __all__ = [
     "MakeChannelLast",
     "FlattenObservationWrapper",
     "FrameStackingWrapper",
+    "AddStepCountWrapper",
+    "AddActionMaskWrapper",
+    "ObservationTypeWrapper",
+    # Utility wrappers
+    "EpisodeStepLimitWrapper",
     # Action wrappers
     "MultiDiscreteToDiscreteWrapper",
     "MultiBoundedToBoundedWrapper",

@@ -1,13 +1,19 @@
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Type
 
 import jax
 import jax.numpy as jnp
 from chex import PRNGKey
+from jax import Array
 
-from stoa.core_wrappers.wrapper import Wrapper
+from stoa.core_wrappers.wrapper import Wrapper, WrapperState
 from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
-from stoa.spaces import ArraySpace, BoundedArraySpace, DiscreteSpace, Space
+from stoa.spaces import ArraySpace, BoundedArraySpace, DictSpace, DiscreteSpace, Space
+
+if TYPE_CHECKING:  # https://github.com/python/mypy/issues/6239
+    from dataclasses import dataclass
+else:
+    from flax.struct import dataclass
 
 
 class AddStartFlagAndPrevAction(Wrapper[State]):
@@ -251,3 +257,235 @@ class MakeChannelLast(Wrapper[State]):
         kwargs["shape"] = self._new_obs_shape
         # Create a new space with the modified shape
         return type(orig_obs_space)(**kwargs)
+
+
+@dataclass
+class StepCountState(WrapperState):
+    """State for tracking episode step count."""
+
+    step_count: Array
+
+
+class AddStepCountWrapper(Wrapper[StepCountState]):
+    """
+    Wrapper that adds step count to observations as a dictionary.
+
+    Converts the observation to a dict with:
+    - "observation": original observation
+    - "step_count": current step count
+    """
+
+    def __init__(self, env: Environment, obs_key: str = "observation"):
+        """
+        Initialize the step count wrapper.
+
+        Args:
+            env: The environment to wrap.
+            obs_key: Key name for the original observation in the new observation dict.
+        """
+        super().__init__(env)
+        self._obs_key = obs_key
+
+    def reset(
+        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
+    ) -> Tuple[StepCountState, TimeStep]:
+        """Reset the environment and initialize step counter."""
+        base_state, timestep = self._env.reset(rng_key, env_params)
+
+        # Initialize wrapper state
+        state = StepCountState(
+            base_env_state=base_state,
+            step_count=jnp.array(0, dtype=jnp.int32),
+        )
+
+        # Create dict observation
+        dict_obs = {
+            self._obs_key: timestep.observation,
+            "step_count": state.step_count,
+        }
+
+        new_timestep = timestep.replace(observation=dict_obs)  # type: ignore
+        return state, new_timestep
+
+    def step(
+        self,
+        state: StepCountState,
+        action: Action,
+        env_params: Optional[EnvParams] = None,
+    ) -> Tuple[StepCountState, TimeStep]:
+        """Step the environment and update step counter."""
+        new_base_state, timestep = self._env.step(state.base_env_state, action, env_params)
+
+        # Update step count
+        new_step_count = state.step_count + 1
+        new_state = StepCountState(
+            base_env_state=new_base_state,
+            step_count=new_step_count,
+        )
+
+        # Create dict observation
+        dict_obs = {
+            self._obs_key: timestep.observation,
+            "step_count": new_step_count,
+        }
+
+        new_timestep = timestep.replace(observation=dict_obs)  # type: ignore
+        return new_state, new_timestep
+
+    def observation_space(self, env_params: Optional[EnvParams] = None) -> Space:
+        """Get the dict observation space."""
+        original_space = self._env.observation_space(env_params)
+        spaces = {
+            self._obs_key: original_space,
+            "step_count": ArraySpace(shape=(), dtype=jnp.int32, name="step_count"),
+        }
+        return DictSpace(spaces=spaces)
+
+
+class AddActionMaskWrapper(Wrapper[State]):
+    """
+    Wrapper that adds action mask to observations as a dictionary.
+
+    Converts the observation to a dict with:
+    - "observation": original observation
+    - "action_mask": legal action mask
+    """
+
+    def __init__(
+        self, env: Environment, action_mask_key: str = "action_mask", obs_key: str = "observation"
+    ):
+        """
+        Initialize the action mask wrapper.
+
+        Args:
+            env: The environment to wrap.
+            action_mask_key: Key for the action mask found in the extras of the timestep.
+            obs_key: Key name for the original observation in the new observation dict.
+        """
+        super().__init__(env)
+        self._obs_key = obs_key
+        self._action_mask_key = action_mask_key
+
+        # Get action space info for mask shape
+        action_space = self.action_space()
+        if hasattr(action_space, "num_values"):
+            self._mask_shape = (action_space.num_values,)
+        else:
+            raise ValueError(
+                f"Unsupported action space type for action mask: {type(action_space)}. "
+                "Action space must have a 'num_values' attribute."
+            )
+
+    def _get_action_mask(self, timestep: TimeStep) -> Array:
+        """Extract action mask from timestep extras or create default."""
+        return timestep.extras.get(
+            self._action_mask_key, jnp.ones(self._mask_shape, dtype=jnp.bool_)
+        )
+
+    def _create_dict_obs(self, timestep: TimeStep) -> Dict[str, Any]:
+        """Create dictionary observation with action mask."""
+        action_mask = self._get_action_mask(timestep)
+        return {
+            self._obs_key: timestep.observation,
+            "action_mask": action_mask,
+        }
+
+    def reset(
+        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
+    ) -> Tuple[State, TimeStep]:
+        """Reset the environment and add action mask."""
+        state, timestep = self._env.reset(rng_key, env_params)
+        dict_obs = self._create_dict_obs(timestep)
+        new_timestep = timestep.replace(observation=dict_obs)  # type: ignore
+        return state, new_timestep
+
+    def step(
+        self,
+        state: State,
+        action: Action,
+        env_params: Optional[EnvParams] = None,
+    ) -> Tuple[State, TimeStep]:
+        """Step the environment and add action mask."""
+        new_state, timestep = self._env.step(state, action, env_params)
+        dict_obs = self._create_dict_obs(timestep)
+        new_timestep = timestep.replace(observation=dict_obs)  # type: ignore
+        return new_state, new_timestep
+
+    def observation_space(self, env_params: Optional[EnvParams] = None) -> Space:
+        """Get the dict observation space."""
+        original_space = self._env.observation_space(env_params)
+        spaces = {
+            self._obs_key: original_space,
+            "action_mask": ArraySpace(shape=self._mask_shape, dtype=jnp.bool_, name="action_mask"),
+        }
+        return DictSpace(spaces=spaces)
+
+
+class ObservationTypeWrapper(Wrapper[State]):
+    """
+    Wrapper that converts dict observations to a user-specified type.
+
+    Takes a dict observation and converts it to any type that can be constructed
+    from keyword arguments (NamedTuple, dataclass, etc.).
+    """
+
+    def __init__(self, env: Environment, observation_type: Type):
+        """
+        Initialize the observation type wrapper.
+
+        Args:
+            env: Environment with dict observations to wrap.
+            observation_type: Type to convert observations to (e.g., NamedTuple, dataclass).
+                              Must be constructible from keyword arguments.
+        """
+        super().__init__(env)
+        self._observation_type = observation_type
+
+        # Validate that the environment has dict observations
+        obs_space = self._env.observation_space()
+        if not isinstance(obs_space, DictSpace):
+            raise ValueError(
+                f"ObservationTypeWrapper requires DictSpace observations, " f"got {type(obs_space)}"
+            )
+
+        # Store the original dict space for reference
+        self._original_dict_space = obs_space
+
+    def _convert_observation(self, dict_obs: Dict[str, Any]) -> Any:
+        """Convert dict observation to the target type."""
+        return self._observation_type(**dict_obs)
+
+    def reset(
+        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
+    ) -> Tuple[State, TimeStep]:
+        """Reset the environment and convert observation type."""
+        state, timestep = self._env.reset(rng_key, env_params)
+        typed_obs = self._convert_observation(timestep.observation)
+        new_timestep = timestep.replace(observation=typed_obs)  # type: ignore
+        return state, new_timestep
+
+    def step(
+        self,
+        state: State,
+        action: Action,
+        env_params: Optional[EnvParams] = None,
+    ) -> Tuple[State, TimeStep]:
+        """Step the environment and convert observation type."""
+        new_state, timestep = self._env.step(state, action, env_params)
+        typed_obs = self._convert_observation(timestep.observation)
+        new_timestep = timestep.replace(observation=typed_obs)  # type: ignore
+        return new_state, new_timestep
+
+    def observation_space(self, env_params: Optional[EnvParams] = None) -> Space:
+        """
+        Return the underlying dict observation space.
+
+        Note: The actual observations returned by this environment are of type
+        `self._observation_type`, not dictionaries. However, the space describes
+        the structure and bounds of the data that gets converted to that type.
+
+        This maintains compatibility with the Stoa space system while allowing
+        type conversion. Users can introspect the actual observation structure
+        through this space.
+        """
+        return self._original_dict_space
