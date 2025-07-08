@@ -56,7 +56,7 @@ class BraxToStoa(Environment):
         # Determine step type and discount
         # Brax uses 'done' for termination and 'truncation' in info for truncation
         terminated = next_brax_state.done
-        truncated = next_brax_state.info.get("truncation", jnp.array(False))
+        truncated = next_brax_state.info.get("truncation", jnp.array(False)).astype(jnp.bool_)
 
         # Determine step type based on termination/truncation
         step_type = jax.lax.select(
