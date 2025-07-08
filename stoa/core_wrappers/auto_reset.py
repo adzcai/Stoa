@@ -67,7 +67,7 @@ class AutoResetWrapper(Wrapper[State]):
         if not hasattr(state, "rng_key"):
             raise ValueError(
                 f"AutoResetWrapper requires environment state to have a 'rng_key' attribute "
-                f"for generating randomness during auto-reset. Got state type: {type(state)}."
+                f"for generating randomness during auto-reset. Got state type: {type(state)}. "
                 f"Consider using the AddRNGKey wrapper to add a rng_key to the state."
             )
 

@@ -56,6 +56,7 @@ from stoa.utility_wrappers.action_space_transforms import (
     MultiBoundedToBoundedWrapper,
     MultiDiscreteToDiscreteWrapper,
 )
+from stoa.utility_wrappers.consistent_extras import ConsistentExtrasWrapper
 from stoa.utility_wrappers.flatten_obs import FlattenObservationWrapper
 from stoa.utility_wrappers.frame_stacking import FrameStackingWrapper
 
@@ -116,6 +117,7 @@ __all__ = [
     "ObservationTypeWrapper",
     # Utility wrappers
     "EpisodeStepLimitWrapper",
+    "ConsistentExtrasWrapper",
     # Action wrappers
     "MultiDiscreteToDiscreteWrapper",
     "MultiBoundedToBoundedWrapper",
