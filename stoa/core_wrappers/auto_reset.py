@@ -34,7 +34,7 @@ class AutoResetWrapper(Wrapper[State]):
     replacing the terminal observation with the initial observation of the new episode.
     Optionally preserves the original terminal observation in timestep.extras.
 
-    The wrapper expects the environment state to have a 'key' attribute that provides
+    The wrapper expects the environment state to have a 'rng_key' attribute that provides
     the source of randomness for automatic resets.
     """
 
@@ -56,25 +56,25 @@ class AutoResetWrapper(Wrapper[State]):
             self._maybe_add_obs_to_extras = lambda timestep: timestep
 
     def _validate_state(self, state: State) -> None:
-        """Validate that the environment state has the required 'key' attribute.
+        """Validate that the environment state has the required 'rng_key' attribute.
 
         Args:
             state: The environment state to validate.
 
         Raises:
-            ValueError: If the state doesn't have a 'key' attribute.
+            ValueError: If the state doesn't have a 'rng_key' attribute.
         """
-        if not hasattr(state, "key"):
+        if not hasattr(state, "rng_key"):
             raise ValueError(
-                f"AutoResetWrapper requires environment state to have a 'key' attribute "
+                f"AutoResetWrapper requires environment state to have a 'rng_key' attribute "
                 f"for generating randomness during auto-reset. Got state type: {type(state)}."
-                f"Consider using the AddRNGKey wrapper to add a key to the state."
+                f"Consider using the AddRNGKey wrapper to add a rng_key to the state."
             )
 
     def _auto_reset(self, state: State, timestep: TimeStep) -> Tuple[State, TimeStep]:
         """Reset the environment and update the timestep with the new initial observation.
 
-        Called when an episode terminates. Generates a new random key, resets the
+        Called when an episode terminates. Generates a new random rng_key, resets the
         environment, and replaces the terminal observation with the reset observation
         while preserving other timestep properties (reward, done flag, etc.).
 
@@ -90,8 +90,8 @@ class AutoResetWrapper(Wrapper[State]):
               observation in extras.
         """
         # Generate new random key for reset
-        key, _ = jax.random.split(state.key)  # type: ignore
-        reset_state, reset_timestep = self._env.reset(key)
+        rng_key, _ = jax.random.split(state.rng_key)  # type: ignore
+        reset_state, reset_timestep = self._env.reset(rng_key)
         reset_observation = reset_timestep.observation
 
         # Preserve terminal observation in extras if requested
@@ -129,7 +129,7 @@ class AutoResetWrapper(Wrapper[State]):
             will have the observation added to extras if next_obs_in_extras is True.
 
         Raises:
-            ValueError: If the environment state doesn't have a 'key' attribute.
+            ValueError: If the environment state doesn't have a 'rng_key' attribute.
         """
         state, timestep = self._env.reset(rng_key, env_params)
 
