@@ -85,6 +85,10 @@ class Space(abc.ABC, Generic[T]):
         """Unflatten this space from JAX tree operations."""
         return cls(**aux_data)
 
+    def generate_value(self) -> T:
+        """Generate a dummy value from this space."""
+        return self.sample(jax.random.PRNGKey(0))
+
 
 class ArraySpace(Space[Array]):
     """Describes a JAX array with a specific shape and dtype."""

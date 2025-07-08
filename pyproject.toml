@@ -126,6 +126,7 @@ dependencies = [
     "jax>=0.4.25,<0.6.0",
     "jaxlib>=0.5.3",
     "jumanji==1.0.0",
+    "kinetix-env",
     "navix>=0.7.0",
     "numpy>=1.26.4",
     "pgx>=2.6.0",
