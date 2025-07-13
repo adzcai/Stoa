@@ -285,16 +285,16 @@ class BoundedArraySpace(ArraySpace):
             shape=self.shape,
             minval=self._minimum_broadcast,
             maxval=self._maximum_broadcast,
-            dtype=self.dtype,
         )
         unbounded_sample_fn = partial(
             jax.random.truncated_normal,
             shape=self.shape,
             lower=self._minimum_broadcast,
             upper=self._maximum_broadcast,
-            dtype=self.dtype,
         )
-        sample = jax.lax.cond(self.is_bounded, bounded_sample_fn, unbounded_sample_fn, rng_key)
+        sample = jax.lax.cond(
+            self.is_bounded, bounded_sample_fn, unbounded_sample_fn, rng_key
+        ).astype(self.dtype)
         return sample
 
     def contains(self, value: Any) -> Array:

@@ -35,13 +35,14 @@ def jumanji_spec_to_stoa_space(spec: Spec) -> Space:
         )
     elif isinstance(spec, Array):
         return ArraySpace(shape=spec.shape, dtype=spec.dtype)
-    elif hasattr(spec, "_fields") and hasattr(spec, "__dict__"):
-        # Handle nested specs (created with specs.Spec constructor)
-        # These have a __dict__ with nested specs as key-value pairs
-        nested_spaces = {}
-        for key, value in spec.__dict__.items():
-            if isinstance(value, Spec):
-                nested_spaces[key] = jumanji_spec_to_stoa_space(value)
+    elif isinstance(spec, Spec):
+        # Handle nested specs (e.g., DictSpec)
+        nested_spaces = {
+            # Iterate over specs
+            f"{key}": jumanji_spec_to_stoa_space(value)
+            for key, value in vars(spec).items()
+            if isinstance(value, Spec)
+        }
         return DictSpace(spaces=nested_spaces)
     else:
         raise TypeError(f"Unsupported Jumanji spec type: {type(spec)}")
