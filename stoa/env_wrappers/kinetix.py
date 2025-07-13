@@ -53,6 +53,10 @@ class KinetixToStoa(GymnaxToStoa):
         # Fix observation for Kinetix
         fixed_obs = self._fix_obs(obs)
 
+        extras = {}
+        extras["solve_rate"] = jnp.asarray(0.0, dtype=jnp.float32)
+        extras["distance"] = jnp.asarray(0.0, dtype=jnp.float32)
+
         # Create the timestep
         timestep = TimeStep(
             step_type=StepType.FIRST,
@@ -93,10 +97,8 @@ class KinetixToStoa(GymnaxToStoa):
 
         # Extract Kinetix-specific metrics from info
         extras = {}
-        if "GoalR" in info:
-            extras["solve_rate"] = jnp.asarray(info["GoalR"], dtype=jnp.float32)
-        if "distance" in info:
-            extras["distance"] = jnp.asarray(info["distance"], dtype=jnp.float32)
+        extras["solve_rate"] = jnp.asarray(info["GoalR"], dtype=jnp.float32)
+        extras["distance"] = jnp.asarray(info["distance"], dtype=jnp.float32)
 
         # Add any other info
         extras.update({k: v for k, v in info.items() if k not in ["GoalR", "distance"]})
