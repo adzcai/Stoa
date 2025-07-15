@@ -89,6 +89,11 @@ class Space(abc.ABC, Generic[T]):
         """Generate a dummy value from this space."""
         return self.sample(jax.random.PRNGKey(0))
 
+    @cached_property
+    def name(self) -> str:
+        """Get a semantic name for this space."""
+        return self.__class__.__name__
+
 
 class ArraySpace(Space[Array]):
     """Describes a JAX array with a specific shape and dtype."""

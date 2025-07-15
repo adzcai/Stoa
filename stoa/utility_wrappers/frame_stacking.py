@@ -1,20 +1,16 @@
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import Optional, Tuple
 
 import jax.numpy as jnp
 from chex import Array, PRNGKey, Shape
 
-from stoa.core_wrappers.wrapper import Wrapper, WrapperState
+from stoa.core_wrappers.wrapper import Wrapper, WrapperState, wrapper_state_replace
 from stoa.env_types import Action, EnvParams, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import ArraySpace, BoundedArraySpace, Space
-
-if TYPE_CHECKING:  # https://github.com/python/mypy/issues/6239
-    from dataclasses import dataclass
-else:
-    from flax.struct import dataclass
+from stoa.stoa_struct import dataclass
 
 
-@dataclass
+@dataclass(custom_replace_fn=wrapper_state_replace)
 class FrameStackState(WrapperState):
     """State for tracking stacked frames."""
 

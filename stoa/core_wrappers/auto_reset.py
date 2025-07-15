@@ -1,16 +1,12 @@
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import Optional, Tuple
 
 import jax
 from chex import PRNGKey
 
-from stoa.core_wrappers.wrapper import Wrapper, WrapperState
+from stoa.core_wrappers.wrapper import Wrapper, WrapperState, wrapper_state_replace
 from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
-
-if TYPE_CHECKING:  # https://github.com/python/mypy/issues/6239
-    from dataclasses import dataclass
-else:
-    from flax.struct import dataclass
+from stoa.stoa_struct import dataclass
 
 NEXT_OBS_KEY_IN_EXTRAS = "next_obs"
 
@@ -59,22 +55,6 @@ class AutoResetWrapper(Wrapper[State]):
             self._maybe_add_obs_to_extras = add_obs_to_extras
         else:
             self._maybe_add_obs_to_extras = lambda timestep: timestep
-
-    def _validate_state(self, state: State) -> None:
-        """Validate that the environment state has the required 'rng_key' attribute.
-
-        Args:
-            state: The environment state to validate.
-
-        Raises:
-            ValueError: If the state doesn't have a 'rng_key' attribute.
-        """
-        if not hasattr(state, "rng_key"):
-            raise ValueError(
-                f"AutoResetWrapper requires environment state to have a 'rng_key' attribute "
-                f"for generating randomness during auto-reset. Got state type: {type(state)}. "
-                f"Consider using the AddRNGKey wrapper to add a rng_key to the state."
-            )
 
     def _auto_reset(self, state: State, timestep: TimeStep) -> Tuple[State, TimeStep]:
         """Reset the environment and update the timestep with the new initial observation.
@@ -132,14 +112,9 @@ class AutoResetWrapper(Wrapper[State]):
         Returns:
             Tuple of (initial_state, initial_timestep). The initial_timestep
             will have the observation added to extras if next_obs_in_extras is True.
-
-        Raises:
-            ValueError: If the environment state doesn't have a 'rng_key' attribute.
         """
+        # Reset the base environment
         state, timestep = self._env.reset(rng_key, env_params)
-
-        # Validate state compatibility early
-        self._validate_state(state)
 
         # Add observation to extras if requested (for consistency with step behavior)
         timestep = self._maybe_add_obs_to_extras(timestep)
@@ -186,7 +161,7 @@ class AutoResetWrapper(Wrapper[State]):
         return state, timestep
 
 
-@dataclass
+@dataclass(custom_replace_fn=wrapper_state_replace)
 class CachedAutoResetState(WrapperState):
     """State for cached auto-reset wrapper."""
 

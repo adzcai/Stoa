@@ -1,14 +1,26 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
+import gymnax.environments.spaces as gymnax_spaces
 import jax
 import jax.numpy as jnp
 from chex import PRNGKey
 from kinetix.environment.env import KinetixObservation
+from kinetix.environment.utils import MultiDiscrete
 from kinetix.render.renderer_pixels import PixelsObservation
 
 from stoa.core_wrappers.wrapper import StateWithKey
 from stoa.env_types import Action, EnvParams, StepType, TimeStep
-from stoa.env_wrappers.gymnax import GymnaxToStoa
+from stoa.env_wrappers.gymnax import GymnaxToStoa, gymnax_space_to_stoa_space
+from stoa.spaces import MultiDiscreteSpace, Space
+
+
+def kinetix_space_to_stoa_space(
+    space: Union[gymnax_spaces.Discrete, gymnax_spaces.Box, gymnax_spaces.Dict, MultiDiscrete]
+) -> Space:
+    if isinstance(space, MultiDiscrete):
+        return MultiDiscreteSpace(num_values=jnp.array(space.n))
+    else:
+        return gymnax_space_to_stoa_space(space)
 
 
 class KinetixToStoa(GymnaxToStoa):
@@ -23,13 +35,10 @@ class KinetixToStoa(GymnaxToStoa):
 
         Args:
             obs: Raw observation from Kinetix environment.
-
-        Returns:
-            Fixed observation as JAX array.
         """
         if isinstance(obs, PixelsObservation):
             return obs.image
-        return jnp.asarray(obs)
+        return obs
 
     def reset(
         self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
@@ -63,7 +72,7 @@ class KinetixToStoa(GymnaxToStoa):
             reward=jnp.array(0.0, dtype=jnp.float32),
             discount=jnp.array(1.0, dtype=jnp.float32),
             observation=fixed_obs,
-            extras={},
+            extras=extras,
         )
 
         return state, timestep
@@ -116,3 +125,17 @@ class KinetixToStoa(GymnaxToStoa):
         )
 
         return new_state, timestep
+
+    def observation_space(self, env_params: Optional[EnvParams] = None) -> Space:
+        """Get the observation space."""
+        if env_params is None:
+            env_params = self._env_params
+        gymnax_obs_space = self._env.observation_space(env_params)
+        return kinetix_space_to_stoa_space(gymnax_obs_space)
+
+    def action_space(self, env_params: Optional[EnvParams] = None) -> Space:
+        """Get the action space."""
+        if env_params is None:
+            env_params = self._env_params
+        gymnax_action_space = self._env.action_space(env_params)
+        return kinetix_space_to_stoa_space(gymnax_action_space)

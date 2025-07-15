@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Any, Generic, Optional, Tuple, TypeVar
+import dataclasses
+from typing import Any, Generic, Optional, Tuple, TypeVar
 
 import jax
 from chex import PRNGKey
@@ -6,47 +7,47 @@ from chex import PRNGKey
 from stoa.env_types import Action, EnvParams, State, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import BoundedArraySpace, EnvironmentSpace, Space
-
-if TYPE_CHECKING:  # https://github.com/python/mypy/issues/6239
-    from dataclasses import dataclass
-else:
-    from flax.struct import dataclass
+from stoa.stoa_struct import dataclass
 
 
-@dataclass
+def wrapper_state_replace(self: "WrapperState", **changes: Any) -> "WrapperState":
+    """Replace that can update attributes in nested wrapper states."""
+    # Separate changes into those for this level vs nested levels
+    my_fields = {f.name for f in self.__dataclass_fields__.values()}
+    local_changes = {k: v for k, v in changes.items() if k in my_fields}
+    nested_changes = {k: v for k, v in changes.items() if k not in my_fields} or None
+
+    if nested_changes is not None:
+        # Only try to replace if base_env_state is a WrapperState
+        if isinstance(self.base_env_state, WrapperState):
+            # Recursively update the nested wrapper state
+            new_base_state = self.base_env_state.replace(**nested_changes)
+            local_changes["base_env_state"] = new_base_state
+        else:
+            # We've reached a non-wrapper state, can't go deeper
+            raise AttributeError(
+                f"Cannot update attributes {list(nested_changes.keys())} - "
+                f"they are not accessible through wrapper states"
+            )
+
+    # Use dataclass replace for local changes
+    return dataclasses.replace(self, **local_changes)
+
+
+@dataclass(custom_replace_fn=wrapper_state_replace)
 class WrapperState:
-    """
-    Base state class for environment wrappers.
+    """Base state class for environment wrappers."""
 
-    Attributes:
-        base_env_state: The state of the underlying (wrapped) environment.
-    """
-
-    base_env_state: State
+    base_env_state: Any
 
     def __getattr__(self, name: str) -> Any:
-        """
-        Delegate attribute access to the base environment state if not found.
-
-        Args:
-            name: The attribute name.
-
-        Returns:
-            The attribute value from base_env_state if present.
-
-        Raises:
-            AttributeError: If the attribute is not found in either self or base_env_state.
-        """
-        # Called only if attribute not found the normal way
+        """Delegate attribute access to the base environment state if not found."""
         if name == "__setstate__":
             raise AttributeError(name)
-        try:
-            return getattr(self.base_env_state, name)
-        except AttributeError as e:
-            raise AttributeError(f"{name} not found in WrapperState or base_env_state") from e
+        return getattr(self.base_env_state, name)
 
     @property
-    def unwrapped_state(self) -> State:
+    def unwrapped_state(self) -> Any:
         """Get the deepest non-wrapper state."""
         current = self.base_env_state
         while isinstance(current, WrapperState):
@@ -171,7 +172,7 @@ class Wrapper(Environment, Generic[S]):
         self._env.close()
 
 
-@dataclass
+@dataclass(custom_replace_fn=wrapper_state_replace)
 class StateWithKey(WrapperState):
     """
     Wrapper state that includes a JAX PRNG key.

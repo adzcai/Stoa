@@ -1,20 +1,16 @@
-from typing import TYPE_CHECKING, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import jax
 import jax.numpy as jnp
 from chex import Numeric, PRNGKey
 from jax import Array
 
-from stoa.core_wrappers.wrapper import Wrapper, WrapperState
+from stoa.core_wrappers.wrapper import Wrapper, WrapperState, wrapper_state_replace
 from stoa.env_types import Action, EnvParams, TimeStep
-
-if TYPE_CHECKING:  # https://github.com/python/mypy/issues/6239
-    from dataclasses import dataclass
-else:
-    from flax.struct import dataclass
+from stoa.stoa_struct import dataclass
 
 
-@dataclass
+@dataclass(custom_replace_fn=wrapper_state_replace)
 class RecordEpisodeMetricsState(WrapperState):
     """State for tracking episode metrics without needing RNG key."""
 

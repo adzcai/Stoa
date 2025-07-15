@@ -1,19 +1,15 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Type
+from typing import Any, Dict, Optional, Tuple, Type
 
 import jax
 import jax.numpy as jnp
 from chex import PRNGKey
 from jax import Array
 
-from stoa.core_wrappers.wrapper import Wrapper, WrapperState
+from stoa.core_wrappers.wrapper import Wrapper, WrapperState, wrapper_state_replace
 from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import ArraySpace, BoundedArraySpace, DictSpace, DiscreteSpace, Space
-
-if TYPE_CHECKING:  # https://github.com/python/mypy/issues/6239
-    from dataclasses import dataclass
-else:
-    from flax.struct import dataclass
+from stoa.stoa_struct import dataclass
 
 
 class AddStartFlagAndPrevAction(Wrapper[State]):
@@ -40,29 +36,32 @@ class AddStartFlagAndPrevAction(Wrapper[State]):
         """
         super().__init__(env)
 
-        # Get action space information
-        action_space = self.action_space()
-        if isinstance(action_space, DiscreteSpace):
-            self.action_dim = action_space.num_values
-            self._discrete = True
-            self._process_action = lambda a: jax.nn.one_hot(a, self.action_dim, dtype=jnp.float32)
-        elif isinstance(action_space, (ArraySpace, BoundedArraySpace)):
-            if len(action_space.shape) != 1:
-                raise ValueError("Only 1D continuous action spaces are supported.")
-            self.action_dim = action_space.shape[0]
-            self._discrete = False
-            self._process_action = lambda a: a.astype(jnp.float32)
-        else:
-            raise ValueError(f"Unsupported action space type: {type(action_space)}")
-
-        # Check if the observation is flat (1D array)
-        obs_space = self.observation_space()
-        if not isinstance(obs_space, (ArraySpace, BoundedArraySpace)):
+        # Check if the original observation is flat (1D array)
+        orig_obs_space = self._env.observation_space()
+        if not isinstance(orig_obs_space, (ArraySpace, BoundedArraySpace)):
             raise ValueError("Observation space must be an ArraySpace or BoundedArraySpace.")
-        if len(obs_space.shape) != 1:
+
+        if len(orig_obs_space.shape) != 1:
             raise ValueError("The observation must be a flat (1D) array.")
 
-        self.orig_obs_dim = obs_space.shape[0]
+        self.orig_obs_dim = orig_obs_space.shape[0]
+
+        # Get action space information
+        orig_action_space = self._env.action_space()
+        if isinstance(orig_action_space, DiscreteSpace):
+            self.action_dim = orig_action_space.num_values
+            self._discrete = True
+            self._process_action = lambda a: jax.nn.one_hot(a, self.action_dim, dtype=jnp.float32)
+        elif isinstance(orig_action_space, (ArraySpace, BoundedArraySpace)):
+            if len(orig_action_space.shape) != 1:
+                raise ValueError("Only 1D continuous action spaces are supported.")
+
+            self.action_dim = orig_action_space.shape[0]
+            self._discrete = False
+            self._process_action = lambda a: a.astype(jnp.float32)
+
+        else:
+            raise ValueError(f"Unsupported action space type: {type(orig_action_space)}")
 
     def reset(
         self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
@@ -138,10 +137,9 @@ class AddStartFlagAndPrevAction(Wrapper[State]):
         """
         orig_obs_space = self._env.observation_space(env_params)
         new_obs_dim = 1 + self.action_dim + self.orig_obs_dim
-        kwargs = orig_obs_space.__dict__
-        kwargs["shape"] = (new_obs_dim,)
+        dtype = orig_obs_space.dtype
         # Create a new space with the modified shape
-        return type(orig_obs_space)(**kwargs)
+        return type(orig_obs_space)(shape=(new_obs_dim,), dtype=dtype, name=orig_obs_space.name)  # type: ignore
 
 
 class MakeChannelLast(Wrapper[State]):
@@ -259,7 +257,7 @@ class MakeChannelLast(Wrapper[State]):
         return type(orig_obs_space)(**kwargs)
 
 
-@dataclass
+@dataclass(custom_replace_fn=wrapper_state_replace)
 class StepCountState(WrapperState):
     """State for tracking episode step count."""
 
