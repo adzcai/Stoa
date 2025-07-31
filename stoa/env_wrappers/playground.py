@@ -11,7 +11,7 @@ from mujoco_playground import State as MjxState
 from stoa.core_wrappers.wrapper import WrapperState, wrapper_state_replace
 from stoa.env_types import Action, EnvParams, StepType, TimeStep
 from stoa.environment import Environment
-from stoa.spaces import BoundedArraySpace, Space
+from stoa.spaces import BoundedArraySpace, DictSpace, Space
 from stoa.stoa_struct import dataclass
 
 
@@ -73,7 +73,7 @@ class MuJoCoPlaygroundToStoa(Environment):
             step_type=step_type,
             reward=jnp.asarray(mjx_state.reward, dtype=jnp.float32),
             discount=jnp.asarray(discount, dtype=jnp.float32),
-            observation=mjx_state.obs.astype(jnp.float32),
+            observation=mjx_state.obs,
             extras={"metrics": mjx_state.metrics, **mjx_state.info},
         )
 
@@ -138,13 +138,26 @@ class MuJoCoPlaygroundToStoa(Environment):
 
     def observation_space(self, env_params: Optional[EnvParams] = None) -> Space:
         """Get the observation space."""
-        return BoundedArraySpace(
-            shape=(self._obs_size,),
-            dtype=jnp.float32,
-            minimum=-jnp.inf,
-            maximum=jnp.inf,
-            name="observation",
-        )
+        if isinstance(self._obs_size, dict):
+            return DictSpace(
+                spaces={
+                    key: BoundedArraySpace(
+                        shape=(shape,) if isinstance(shape, int) else shape,
+                        dtype=jnp.float32,
+                        minimum=-jnp.inf,
+                        maximum=jnp.inf,
+                    )
+                    for key, shape in self._obs_size.items()
+                }
+            )
+        else:
+            return BoundedArraySpace(
+                shape=(self._obs_size,) if isinstance(self._obs_size, int) else self._obs_size,
+                dtype=jnp.float32,
+                minimum=-jnp.inf,
+                maximum=jnp.inf,
+                name="observation",
+            )
 
     def action_space(self, env_params: Optional[EnvParams] = None) -> Space:
         """Get the action space."""

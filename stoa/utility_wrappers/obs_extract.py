@@ -34,7 +34,7 @@ class ObservationExtractWrapper(Wrapper[State]):
         super().__init__(env)
         self._observation_attribute = observation_attribute
 
-    def _extract_observation(self, full_observation: Any) -> Any:
+    def _extract_observation(self, full_observation: Any) -> Tuple[Any, dict]:
         """
         Extract the desired attribute from the full observation.
 
@@ -54,7 +54,11 @@ class ObservationExtractWrapper(Wrapper[State]):
                     f"Observation attribute '{self._observation_attribute}' not found in "
                     f"observation dict. Available keys: {available_keys}"
                 )
-            return full_observation[self._observation_attribute]
+            # Extract from dict
+            obs = full_observation[self._observation_attribute]
+            # Return the rest of the dict as extras
+            extras = {k: v for k, v in full_observation.items() if k != self._observation_attribute}
+            return obs, extras
 
         elif hasattr(full_observation, "_asdict"):
             # Named tuple
@@ -65,11 +69,22 @@ class ObservationExtractWrapper(Wrapper[State]):
                     f"Observation attribute '{self._observation_attribute}' not found in "
                     f"named tuple observation. Available fields: {available_fields}"
                 )
-            return obs_dict[self._observation_attribute]
+            # Extract from named tuple
+            obs = obs_dict[self._observation_attribute]
+            # Return the rest of the named tuple as extras
+            extras = {k: v for k, v in obs_dict.items() if k != self._observation_attribute}
+            return obs, extras
 
         elif hasattr(full_observation, self._observation_attribute):
             # Regular object with attribute
-            return getattr(full_observation, self._observation_attribute)
+            obs = getattr(full_observation, self._observation_attribute)
+            # Return the rest of the object as extras
+            extras = {
+                k: v
+                for k, v in full_observation.__dict__.items()
+                if k != self._observation_attribute
+            }
+            return obs, extras
 
         else:
             raise ValueError(
@@ -95,10 +110,13 @@ class ObservationExtractWrapper(Wrapper[State]):
         state, timestep = self._env.reset(rng_key, env_params)
 
         # Extract the desired observation attribute
-        extracted_obs = self._extract_observation(timestep.observation)
+        extracted_obs, obs_extras = self._extract_observation(timestep.observation)
 
-        # Create new timestep with extracted observation
-        new_timestep = timestep.replace(observation=extracted_obs)  # type: ignore
+        # Update timestep extras with the obs extras
+        new_extras = {**obs_extras, **timestep.extras}
+
+        # Create new timestep with extracted observation and updated extras
+        new_timestep = timestep.replace(observation=extracted_obs, extras=new_extras)  # type: ignore
 
         return state, new_timestep
 
@@ -123,10 +141,12 @@ class ObservationExtractWrapper(Wrapper[State]):
         new_state, timestep = self._env.step(state, action, env_params)
 
         # Extract the desired observation attribute
-        extracted_obs = self._extract_observation(timestep.observation)
+        extracted_obs, obs_extras = self._extract_observation(timestep.observation)
+        # Update timestep extras with the obs extras
+        new_extras = {**obs_extras, **timestep.extras}
 
-        # Create new timestep with extracted observation
-        new_timestep = timestep.replace(observation=extracted_obs)  # type: ignore
+        # Create new timestep with extracted observation and updated extras
+        new_timestep = timestep.replace(observation=extracted_obs, extras=new_extras)  # type: ignore
 
         return new_state, new_timestep
 
