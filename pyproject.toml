@@ -95,7 +95,7 @@ xminigrid = { git = "https://github.com/corl-team/xland-minigrid.git", rev = "ma
 gymnax = { git = " git+https://github.com/RobertTLange/gymnax.git", rev = "main" }
 
 [project]
-name = "stoa"
+name = "stoa-env"
 readme = "README.md"
 description = "Single-Agent Reinforcement Learning with JAX"
 authors = [
@@ -132,13 +132,13 @@ navix = ["navix>=0.7.0"]
 pgx = ["pgx>=2.6.0"]
 xminigrid = ["xminigrid"]
 all = [
-    "stoa[brax]",
-    "stoa[gymnax]",
-    "stoa[jumanji]",
-    "stoa[kinetix]",
-    "stoa[navix]",
-    "stoa[pgx]",
-    "stoa[xminigrid]",
+    "stoa-env[brax]",
+    "stoa-env[gymnax]",
+    "stoa-env[jumanji]",
+    "stoa-env[kinetix]",
+    "stoa-env[navix]",
+    "stoa-env[pgx]",
+    "stoa-env[xminigrid]",
 ]
 dev = [
     "black",

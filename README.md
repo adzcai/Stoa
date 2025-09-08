@@ -46,7 +46,7 @@ Stoa provides a lightweight, JAX-native interface for reinforcement learning env
 You can install the core `stoa` library via pip:
 
 ```bash
-pip install stoa
+pip install stoa-env
 ```
 
 This minimal installation includes the core API and wrappers but no specific environment adapters.
@@ -59,16 +59,16 @@ Adapters for external environment libraries are available as optional extras. Yo
 
 ```bash
 # Example for Gymnax
-pip install "stoa[gymnax]"
+pip install "stoa-env[gymnax]"
 
 # Example for Brax
-pip install "stoa[brax]"
+pip install "stoa-env[brax]"
 ```
 
 **Install all available adapters:**
 
 ```bash
-pip install "stoa[all]"
+pip install "stoa-env[all]"
 ```
 
 ---
