@@ -79,7 +79,7 @@ def dataclass(
         for name in data_fields:
             if name not in state:
                 raise ValueError(
-                    f"Missing field {name} in state dict while restoring"  # type: ignore[attr-defined]
+                    f"Missing field {name} in state dict while restoring"  # type: ignore[attr-defined, union-attr]
                     f" an instance of {clz.__name__},"
                     f" at path {serialization.current_path()}"
                 )
@@ -89,7 +89,7 @@ def dataclass(
         if state:
             names = ",".join(state.keys())
             raise ValueError(
-                f'Unknown field(s) "{names}" in state dict while'  # type: ignore[attr-defined]
+                f'Unknown field(s) "{names}" in state dict while'  # type: ignore[attr-defined, union-attr]
                 f" restoring an instance of {clz.__name__}"
                 f" at path {serialization.current_path()}"
             )

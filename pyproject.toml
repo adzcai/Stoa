@@ -91,7 +91,6 @@ include = ['stoa*']
 version = {attr = "stoa.__version__"}
 
 [tool.uv.sources]
-popjym = { git = "https://github.com/FLAIROx/popjym.git" }
 xminigrid = { git = "https://github.com/corl-team/xland-minigrid.git", rev = "main" }
 gymnax = { git = " git+https://github.com/RobertTLange/gymnax.git", rev = "main" }
 
@@ -114,47 +113,53 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
-    "brax>=0.9.0",
     "chex>=0.1.89",
-    "craftax>=1.4.5",
     "flax>=0.10.5",
-    "gymnasium>=1.1.1",
-    "gymnax>=0.0.6",
     "jax>=0.4.25,<0.6.0",
     "jaxlib>=0.5.3",
-    "jumanji==1.0.0",
-    "kinetix-env",
-    "navix>=0.7.0",
     "numpy>=1.26.4",
-    "pgx>=2.6.0",
-    "popjym",
-    "xminigrid",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
+brax = ["brax>=0.9.0"]
+gymnax = ["gymnax>=0.0.6", "gymnasium>=1.1.1"]
+jumanji = ["jumanji==1.0.0"]
+kinetix = ["kinetix-env"]
+navix = ["navix>=0.7.0"]
+pgx = ["pgx>=2.6.0"]
+xminigrid = ["xminigrid"]
+all = [
+    "stoa[brax]",
+    "stoa[gymnax]",
+    "stoa[jumanji]",
+    "stoa[kinetix]",
+    "stoa[navix]",
+    "stoa[pgx]",
+    "stoa[xminigrid]",
+]
 dev = [
-    "black==25.1.0",
+    "black",
     "coverage",
-    "flake8==7.1.1",
-    "importlib-metadata>=6.0",
-    "isort==5.13.2",
+    "flake8",
+    "importlib-metadata",
+    "isort",
     "livereload",
-    "mkdocs==1.6.1",
+    "mkdocs",
     "mkdocs-git-revision-date-plugin",
     "mkdocs-include-markdown-plugin",
-    "mkdocs-material==9.5.39",
-    "mkdocs-mermaid2-plugin>=0.6.0",
-    "mkdocstrings==0.26.1",
-    "mknotebooks>=0.7.1",
-    "mypy==1.13.0",
+    "mkdocs-material",
+    "mkdocs-mermaid2-plugin",
+    "mkdocstrings",
+    "mknotebooks",
+    "mypy",
     "nbmake",
-    "pre-commit==4.0.1",
+    "pre-commit",
     "promise",
     "pymdown-extensions",
-    "pytest==8.4.0",
+    "pytest",
     "pytest-cov",
     "pytest-mock",
     "pytest-parallel",

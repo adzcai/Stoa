@@ -14,12 +14,14 @@ class ConsistentExtrasWrapper(Wrapper[State]):
 
     This wrapper performs a single dummy step during initialization to discover
     all possible keys in extras, then ensures these keys are always present
-    (with zero values when missing) in both reset and step. This can cause a 
-    significant memory overhead if extras contain large arrays and a start 
+    (with zero values when missing) in both reset and step. This can cause a
+    significant memory overhead if extras contain large arrays and a start
     up cost due to the dummy step, but is necessary for JAX scanning.
-    
+
     Alternatively, users can manually ensure consistent extras structure
-    by modifying their environment's reset and step methods.
+    by modifying their environment's reset and step methods. If one does not need
+    all the extras a base env provides, consider using SpecificExtrasWrapper or
+    NoExtrasWrapper for much lower overhead and faster initialisation.
     """
 
     def __init__(
@@ -47,7 +49,7 @@ class ConsistentExtrasWrapper(Wrapper[State]):
         dummy_state, reset_timestep = env.reset(reset_key, env_params)
         # Merge extras from both reset and step (if step is done)
         all_extras = dict(reset_timestep.extras)
-        
+
         if do_dummy_step:
             dummy_action = env.action_space(env_params).sample(step_key)
             _, step_timestep = env.step(dummy_state, dummy_action, env_params)
@@ -73,7 +75,6 @@ class ConsistentExtrasWrapper(Wrapper[State]):
     ) -> Tuple[State, TimeStep]:
         new_state, timestep = self._env.step(state, action, env_params)
         return new_state, timestep.replace(extras=self._fill_extras(timestep.extras))  # type: ignore
-
 
 
 class SpecificExtrasWrapper(Wrapper[State]):
@@ -133,7 +134,7 @@ class SpecificExtrasWrapper(Wrapper[State]):
         filtered_extras = self._select_extras(timestep.extras)
 
         # Return the state and a new timestep with the filtered extras.
-        return state, timestep.replace(extras=filtered_extras) # type: ignore
+        return state, timestep.replace(extras=filtered_extras)  # type: ignore
 
     def step(
         self, state: State, action: Action, env_params: Optional[EnvParams] = None
@@ -156,9 +157,9 @@ class SpecificExtrasWrapper(Wrapper[State]):
         filtered_extras = self._select_extras(timestep.extras)
 
         # Return the new state and a new timestep with the filtered extras.
-        return new_state, timestep.replace(extras=filtered_extras) # type: ignore
-    
-    
+        return new_state, timestep.replace(extras=filtered_extras)  # type: ignore
+
+
 class NoExtrasWrapper(Wrapper[State]):
     """Removes all base environment extras by setting TimeStep.extras to an empty dict."""
 
@@ -178,7 +179,7 @@ class NoExtrasWrapper(Wrapper[State]):
         # Call the reset method of the wrapped environment.
         state, timestep = self._env.reset(rng_key, env_params)
         # Return the state and a new timestep with empty extras.
-        return state, timestep.replace(extras={}) # type: ignore
+        return state, timestep.replace(extras={})  # type: ignore
 
     def step(
         self, state: State, action: Action, env_params: Optional[EnvParams] = None
@@ -197,4 +198,4 @@ class NoExtrasWrapper(Wrapper[State]):
         # Call the step method of the wrapped environment.
         new_state, timestep = self._env.step(state, action, env_params)
         # Return the new state and a new timestep with empty extras.
-        return new_state, timestep.replace(extras={}) # type: ignore
+        return new_state, timestep.replace(extras={})  # type: ignore

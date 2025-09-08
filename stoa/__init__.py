@@ -25,16 +25,6 @@ from stoa.env_types import (
     TimeStep,
     TimeStepExtras,
 )
-
-# Environment adapters
-from stoa.env_wrappers.brax import BraxToStoa
-from stoa.env_wrappers.gymnax import GymnaxToStoa
-from stoa.env_wrappers.jumanji import JumanjiToStoa
-from stoa.env_wrappers.kinetix import KinetixToStoa
-from stoa.env_wrappers.navix import NavixToStoa
-from stoa.env_wrappers.pgx import PGXToStoa
-from stoa.env_wrappers.playground import MuJoCoPlaygroundToStoa
-from stoa.env_wrappers.xminigrid import XMiniGridToStoa
 from stoa.environment import Environment
 
 # Spaces
@@ -71,6 +61,7 @@ from stoa.utility_wrappers.obs_transforms import (
 )
 from stoa.utility_wrappers.step_limit import EpisodeStepLimitWrapper
 
+# Environment adapters (optional dependencies)
 __all__ = [
     # Version
     "__version__",
@@ -121,13 +112,60 @@ __all__ = [
     # Action wrappers
     "MultiDiscreteToDiscreteWrapper",
     "MultiBoundedToBoundedWrapper",
-    # Environment adapters
-    "BraxToStoa",
-    "GymnaxToStoa",
-    "JumanjiToStoa",
-    "NavixToStoa",
-    "XMiniGridToStoa",
-    "KinetixToStoa",
-    "MuJoCoPlaygroundToStoa",
-    "PGXToStoa",
 ]
+
+try:
+    from stoa.env_wrappers.brax import BraxToStoa
+
+    __all__.append("BraxToStoa")
+except ImportError:
+    pass
+
+try:
+    from stoa.env_wrappers.gymnax import GymnaxToStoa
+
+    __all__.append("GymnaxToStoa")
+except ImportError:
+    pass
+
+try:
+    from stoa.env_wrappers.jumanji import JumanjiToStoa
+
+    __all__.append("JumanjiToStoa")
+except ImportError:
+    pass
+
+try:
+    from stoa.env_wrappers.kinetix import KinetixToStoa
+
+    __all__.append("KinetixToStoa")
+except ImportError:
+    pass
+
+try:
+    from stoa.env_wrappers.navix import NavixToStoa
+
+    __all__.append("NavixToStoa")
+except ImportError:
+    pass
+
+try:
+    from stoa.env_wrappers.pgx import PGXToStoa
+
+    __all__.append("PGXToStoa")
+except ImportError:
+    pass
+
+try:
+    from stoa.env_wrappers.playground import MuJoCoPlaygroundToStoa
+
+    __all__.append("MuJoCoPlaygroundToStoa")
+except ImportError:
+    pass
+
+try:
+    from stoa.env_wrappers.xminigrid import XMiniGridToStoa
+
+    __all__.append("XMiniGridToStoa")
+except ImportError:
+    pass
