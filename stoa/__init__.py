@@ -1,7 +1,7 @@
 """Stoa: A JAX-Native Interface for Reinforcement Learning Environments."""
 
 # Version
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 # Core wrappers
 from stoa.core_wrappers.auto_reset import AutoResetWrapper
