@@ -118,7 +118,7 @@ classifiers = [
 dependencies = [
     "chex>=0.1.89",
     "flax>=0.10.5",
-    "jax>=0.4.25,<0.6.0",
+    "jax>=0.4.25",
     "jaxlib>=0.5.3",
     "numpy>=1.26.4",
 ]
