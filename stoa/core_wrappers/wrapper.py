@@ -47,6 +47,11 @@ class WrapperState:
         return getattr(self.base_env_state, name)
 
     @property
+    def inner_state(self) -> Any:
+        """Access the immediate wrapped environment state."""
+        return self.base_env_state
+
+    @property
     def unwrapped_state(self) -> Any:
         """Get the deepest non-wrapper state."""
         current = self.base_env_state
