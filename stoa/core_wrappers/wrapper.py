@@ -46,10 +46,26 @@ class WrapperState:
             raise AttributeError(name)
         return getattr(self.base_env_state, name)
 
-    @property
-    def inner_state(self) -> Any:
-        """Access the immediate wrapped environment state."""
-        return self.base_env_state
+    def get_inner_state_at(self, depth: int) -> "WrapperState":
+        """
+        Access the wrapped state at a specific depth.
+
+        Args:
+            depth: The desired depth. `depth=0` returns self, `depth=1` returns
+                   the wrapped state below the top level, and so on.
+        """
+        if depth == 0:
+            return self
+
+        current_state = self
+        # We iterate 'depth' times to go 'depth' levels down.
+        for _ in range(depth):
+            # Check if we can go deeper
+            if not isinstance(current_state, WrapperState):
+                raise IndexError(f"Cannot access depth {depth}. Maximum depth is {self.depth}.")
+            current_state = current_state.base_env_state
+
+        return current_state
 
     @property
     def unwrapped_state(self) -> Any:
