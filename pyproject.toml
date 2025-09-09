@@ -126,7 +126,7 @@ dependencies = [
 [project.optional-dependencies]
 brax = ["brax>=0.9.0"]
 gymnax = ["gymnax>=0.0.6", "gymnasium>=1.1.1"]
-jumanji = ["jumanji==1.0.0"]
+jumanji = ["jumanji>=1.1.1"]
 kinetix = ["kinetix-env"]
 navix = ["navix>=0.7.0"]
 pgx = ["pgx>=2.6.0"]

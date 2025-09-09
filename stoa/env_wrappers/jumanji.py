@@ -103,12 +103,12 @@ class JumanjiToStoa(Environment):
 
     def observation_space(self, env_params: Optional[EnvParams] = None) -> Space:
         """Get the observation space."""
-        jumanji_obs_spec = self._env.observation_spec()
+        jumanji_obs_spec = self._env.observation_spec
         return jumanji_spec_to_stoa_space(jumanji_obs_spec)
 
     def action_space(self, env_params: Optional[EnvParams] = None) -> Space:
         """Get the action space."""
-        jumanji_action_spec = self._env.action_spec()
+        jumanji_action_spec = self._env.action_spec
         return jumanji_spec_to_stoa_space(jumanji_action_spec)
 
     def state_space(self, env_params: Optional[EnvParams] = None) -> Space:
