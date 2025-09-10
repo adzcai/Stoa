@@ -29,7 +29,7 @@ Stoa provides a lightweight, JAX-native interface for reinforcement learning env
 
 > ⚠️ **Early Development** – Core abstractions are in place, but the library is still growing!
 
----
+
 
 ## 🎯 What Stoa Provides
 
@@ -39,7 +39,7 @@ Stoa provides a lightweight, JAX-native interface for reinforcement learning env
 * **Space Definitions**: Structured representations for observation, action, and state spaces.
 * **TimeStep Protocol**: A standardized `TimeStep` structure to represent environment transitions with clear termination and truncation signals.
 
----
+
 
 ## 🛠️ Installation
 
@@ -71,7 +71,7 @@ pip install "stoa-env[brax]"
 pip install "stoa-env[all]"
 ```
 
----
+
 
 ## 🧩 Available Adapters
 
@@ -86,7 +86,7 @@ Stoa currently supports the following JAX-native environment libraries:
 * **MuJoCo Playground**
 * **XMinigrid**
 
----
+
 
 ## ✨ Available Wrappers
 
@@ -97,7 +97,7 @@ Stoa provides a rich set of wrappers to modify and extend environment behavior:
 * **Action Space Wrappers**: `MultiDiscreteToDiscreteWrapper`, `MultiBoundedToBoundedWrapper`.
 * **Utility Wrappers**: `EpisodeStepLimitWrapper`, `ConsistentExtrasWrapper`.
 
----
+
 
 ## ⚡ Usage Example
 
@@ -142,7 +142,7 @@ for _ in range(100):
         total_reward = 0
 ```
 
----
+
 
 ## 🛣️ Roadmap
 
@@ -150,13 +150,13 @@ for _ in range(100):
 * **More Wrappers**: Add more common utility wrappers (e.g., observation normalization, reward clipping).
 * **Integration Examples**: Provide examples of how to integrate `stoa` with popular JAX-based RL libraries.
 
----
+
 
 ## 🤝 Contributing
 
 We're building Stoa to provide a common foundation for JAX-based RL research. Contributions are welcome!
 
----
+
 
 ### 📚 Related Projects
 
@@ -167,3 +167,15 @@ We're building Stoa to provide a common foundation for JAX-based RL research. Co
 * **Navix** – Grid-world environments in JAX
 * **PGX** - Classic board and card game environments in JAX
 * **Kinetix** - Robotics environments in JAX
+
+## Citation
+If you use Stoa, please cite it!
+
+```
+@misc{toledo2025stoa,
+  author = {Edan Toledo},
+  title  = {Stoa: A JAX-Native Interface for Reinforcement Learning Environments},
+  year   = {2025},
+  url    = {https://github.com/EdanToledo/Stoa}
+}
+```
