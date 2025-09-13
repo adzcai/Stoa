@@ -52,7 +52,7 @@ class JumanjiToStoa(Environment):
     """Jumanji environments in Stoa interface."""
 
     def __init__(self, env: JumanjiEnvironment):
-        """Initialize the Jumanji wrapper.
+        """Initialize the Jumanji Stoa Adapter.
 
         Args:
             env: The Jumanji environment to wrap.

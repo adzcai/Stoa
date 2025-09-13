@@ -8,7 +8,7 @@ from chex import PRNGKey
 from gymnax import EnvParams as GymnaxEnvParams
 from gymnax.environments.environment import Environment as GymnaxEnvironment
 
-from stoa.core_wrappers.wrapper import StateWithKey
+from stoa.env_adapters.base import AdapterStateWithKey
 from stoa.env_types import Action, EnvParams, StepType, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import ArraySpace, BoundedArraySpace, DictSpace, DiscreteSpace, Space
@@ -78,7 +78,7 @@ class GymnaxToStoa(Environment):
 
     def reset(
         self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[StateWithKey, TimeStep]:
+    ) -> Tuple[AdapterStateWithKey, TimeStep]:
         """Reset the environment."""
         reset_key, state_key = jax.random.split(rng_key)
 
@@ -90,7 +90,7 @@ class GymnaxToStoa(Environment):
         obs, gymnax_state = self._env.reset(reset_key, env_params)
 
         # Wrap the state with an rng key
-        state = StateWithKey(
+        state = AdapterStateWithKey(
             base_env_state=gymnax_state,
             rng_key=state_key,
         )
@@ -108,10 +108,10 @@ class GymnaxToStoa(Environment):
 
     def step(
         self,
-        state: StateWithKey,
+        state: AdapterStateWithKey,
         action: Action,
         env_params: Optional[EnvParams] = None,
-    ) -> Tuple[StateWithKey, TimeStep]:
+    ) -> Tuple[AdapterStateWithKey, TimeStep]:
         """Step the environment."""
         step_key, next_key = jax.random.split(state.rng_key)
 
@@ -125,7 +125,7 @@ class GymnaxToStoa(Environment):
         )
 
         # Wrap the state with a new key
-        new_state = StateWithKey(
+        new_state = AdapterStateWithKey(
             base_env_state=gymnax_state,
             rng_key=next_key,
         )
@@ -164,7 +164,7 @@ class GymnaxToStoa(Environment):
             "Gymnax does not expose a state space. Use observation_space instead."
         )
 
-    def render(self, state: StateWithKey, env_params: Optional[EnvParams] = None) -> Any:
+    def render(self, state: AdapterStateWithKey, env_params: Optional[EnvParams] = None) -> Any:
         """Render the environment."""
         if env_params is None:
             env_params = self._env_params

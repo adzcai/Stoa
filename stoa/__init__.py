@@ -115,56 +115,56 @@ __all__ = [
 ]
 
 try:
-    from stoa.env_wrappers.brax import BraxToStoa
+    from stoa.env_adapters.brax import BraxToStoa
 
     __all__.append("BraxToStoa")
 except ImportError:
     pass
 
 try:
-    from stoa.env_wrappers.gymnax import GymnaxToStoa
+    from stoa.env_adapters.gymnax import GymnaxToStoa
 
     __all__.append("GymnaxToStoa")
 except ImportError:
     pass
 
 try:
-    from stoa.env_wrappers.jumanji import JumanjiToStoa
+    from stoa.env_adapters.jumanji import JumanjiToStoa
 
     __all__.append("JumanjiToStoa")
 except ImportError:
     pass
 
 try:
-    from stoa.env_wrappers.kinetix import KinetixToStoa
+    from stoa.env_adapters.kinetix import KinetixToStoa
 
     __all__.append("KinetixToStoa")
 except ImportError:
     pass
 
 try:
-    from stoa.env_wrappers.navix import NavixToStoa
+    from stoa.env_adapters.navix import NavixToStoa
 
     __all__.append("NavixToStoa")
 except ImportError:
     pass
 
 try:
-    from stoa.env_wrappers.pgx import PGXToStoa
+    from stoa.env_adapters.pgx import PGXToStoa
 
     __all__.append("PGXToStoa")
 except ImportError:
     pass
 
 try:
-    from stoa.env_wrappers.playground import MuJoCoPlaygroundToStoa
+    from stoa.env_adapters.playground import MuJoCoPlaygroundToStoa
 
     __all__.append("MuJoCoPlaygroundToStoa")
 except ImportError:
     pass
 
 try:
-    from stoa.env_wrappers.xminigrid import XMiniGridToStoa
+    from stoa.env_adapters.xminigrid import XMiniGridToStoa
 
     __all__.append("XMiniGridToStoa")
 except ImportError:

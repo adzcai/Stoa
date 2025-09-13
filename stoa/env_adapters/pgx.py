@@ -5,7 +5,7 @@ import jax.numpy as jnp
 from chex import PRNGKey
 from pgx import Env as PGXEnv
 
-from stoa.core_wrappers.wrapper import StateWithKey
+from stoa.env_adapters.base import AdapterStateWithKey
 from stoa.env_types import Action, EnvParams, StepType, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import ArraySpace, DiscreteSpace, Space
@@ -32,7 +32,7 @@ class PGXToStoa(Environment):
 
     def reset(
         self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[StateWithKey, TimeStep]:
+    ) -> Tuple[AdapterStateWithKey, TimeStep]:
         """Reset the environment."""
         init_key, state_key = jax.random.split(rng_key)
 
@@ -40,7 +40,7 @@ class PGXToStoa(Environment):
         pgx_state = self._env.init(init_key)
 
         # Wrap state with RNG key
-        state = StateWithKey(
+        state = AdapterStateWithKey(
             base_env_state=pgx_state,
             rng_key=state_key,
         )
@@ -69,10 +69,10 @@ class PGXToStoa(Environment):
 
     def step(
         self,
-        state: StateWithKey,
+        state: AdapterStateWithKey,
         action: Action,
         env_params: Optional[EnvParams] = None,
-    ) -> Tuple[StateWithKey, TimeStep]:
+    ) -> Tuple[AdapterStateWithKey, TimeStep]:
         """Step the environment."""
         step_key, next_key = jax.random.split(state.rng_key)
 
@@ -80,7 +80,7 @@ class PGXToStoa(Environment):
         pgx_state = self._env.step(state.base_env_state, action, step_key)
 
         # Wrap new state with RNG key
-        new_state = StateWithKey(
+        new_state = AdapterStateWithKey(
             base_env_state=pgx_state,
             rng_key=next_key,
         )
@@ -144,14 +144,14 @@ class PGXToStoa(Environment):
             "PGX does not expose a state space. Use observation_space instead."
         )
 
-    def render(self, state: StateWithKey, env_params: Optional[EnvParams] = None) -> Any:
+    def render(self, state: AdapterStateWithKey, env_params: Optional[EnvParams] = None) -> Any:
         """Render the environment."""
         if hasattr(self._env, "render"):
             return self._env.render(state.base_env_state)
         else:
             raise NotImplementedError(f"Rendering not supported for {self._env.__class__.__name__}")
 
-    def get_legal_actions(self, state: StateWithKey) -> jnp.ndarray:
+    def get_legal_actions(self, state: AdapterStateWithKey) -> jnp.ndarray:
         """Get legal actions for the current state.
 
         Args:
@@ -162,7 +162,7 @@ class PGXToStoa(Environment):
         """
         return state.base_env_state.legal_action_mask.astype(jnp.bool_)
 
-    def get_current_player(self, state: StateWithKey) -> jnp.ndarray:
+    def get_current_player(self, state: AdapterStateWithKey) -> jnp.ndarray:
         """Get the current player.
 
         Args:

@@ -15,7 +15,7 @@ class BraxToStoa(Environment):
     """Brax environments in stoa interface."""
 
     def __init__(self, env: BraxEnv):
-        """Initialize the Brax wrapper.
+        """Initialize the Brax Stoa Adapter.
 
         Args:
             env: The Brax environment to wrap.

@@ -8,9 +8,9 @@ from kinetix.environment.env import KinetixObservation
 from kinetix.environment.utils import MultiDiscrete
 from kinetix.render.renderer_pixels import PixelsObservation
 
-from stoa.core_wrappers.wrapper import StateWithKey
+from stoa.env_adapters.base import AdapterStateWithKey
+from stoa.env_adapters.gymnax import GymnaxToStoa, gymnax_space_to_stoa_space
 from stoa.env_types import Action, EnvParams, StepType, TimeStep
-from stoa.env_wrappers.gymnax import GymnaxToStoa, gymnax_space_to_stoa_space
 from stoa.spaces import MultiDiscreteSpace, Space
 
 
@@ -42,7 +42,7 @@ class KinetixToStoa(GymnaxToStoa):
 
     def reset(
         self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[StateWithKey, TimeStep]:
+    ) -> Tuple[AdapterStateWithKey, TimeStep]:
         """Reset the environment with Kinetix-specific observation handling."""
         reset_key, state_key = jax.random.split(rng_key)
 
@@ -54,7 +54,7 @@ class KinetixToStoa(GymnaxToStoa):
         obs, kinetix_state = self._env.reset(reset_key, env_params)
 
         # Wrap the state with an rng key
-        state = StateWithKey(
+        state = AdapterStateWithKey(
             base_env_state=kinetix_state,
             rng_key=state_key,
         )
@@ -79,10 +79,10 @@ class KinetixToStoa(GymnaxToStoa):
 
     def step(
         self,
-        state: StateWithKey,
+        state: AdapterStateWithKey,
         action: Action,
         env_params: Optional[EnvParams] = None,
-    ) -> Tuple[StateWithKey, TimeStep]:
+    ) -> Tuple[AdapterStateWithKey, TimeStep]:
         """Step the environment with Kinetix-specific observation and metrics handling."""
         step_key, next_key = jax.random.split(state.rng_key)
 
@@ -96,7 +96,7 @@ class KinetixToStoa(GymnaxToStoa):
         )
 
         # Wrap the state with a new key
-        new_state = StateWithKey(
+        new_state = AdapterStateWithKey(
             base_env_state=kinetix_state,
             rng_key=next_key,
         )

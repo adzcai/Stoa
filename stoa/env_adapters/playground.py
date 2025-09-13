@@ -8,15 +8,15 @@ from mujoco.mjx import Model as MjxModel
 from mujoco_playground import MjxEnv
 from mujoco_playground import State as MjxState
 
-from stoa.core_wrappers.wrapper import WrapperState, wrapper_state_replace
+from stoa.env_adapters.base import AdapterState, adapter_state_replace
 from stoa.env_types import Action, EnvParams, StepType, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import BoundedArraySpace, DictSpace, Space
 from stoa.stoa_struct import dataclass
 
 
-@dataclass(custom_replace_fn=wrapper_state_replace)
-class PlaygroundState(WrapperState):
+@dataclass(custom_replace_fn=adapter_state_replace)
+class PlaygroundState(AdapterState):
     """State for the MuJoCo Playground environments
     so domain randomization is natively supported."""
 
@@ -33,7 +33,7 @@ class MuJoCoPlaygroundToStoa(Environment):
             Callable[[mjx.Model, PRNGKey], Tuple[mjx.Model, Any]]
         ] = None,
     ):
-        """Initialize the MuJoCo Playground wrapper.
+        """Initialize the MuJoCo Playground Stoa adapter.
 
         Args:
             env: The MuJoCo Playground environment to wrap.
