@@ -143,7 +143,7 @@ for _ in range(100):
         total_reward = 0
 ```
 
-
+For more advanced usage, we refer to [Stoix](https://github.com/EdanToledo/Stoix) which has fully utilised Stoa for its environment abstractions.
 
 ## 🛣️ Roadmap
 
