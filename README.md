@@ -84,7 +84,8 @@ Stoa currently supports the following JAX-native environment libraries:
 * **Navix**
 * **PGX** (Game environments)
 * **MuJoCo Playground**
-* **XMinigrid**
+* **XLand-Minigrid**
+* **Craftax (Gymnax Adapter)**
 
 
 
@@ -167,6 +168,7 @@ We're building Stoa to provide a common foundation for JAX-based RL research. Co
 * **Navix** – Grid-world environments in JAX
 * **PGX** - Classic board and card game environments in JAX
 * **Kinetix** - Robotics environments in JAX
+* **Craftax** - Crafter in JAX
 
 ## Citation
 If you use Stoa, please cite it!
