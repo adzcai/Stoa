@@ -61,7 +61,6 @@ from stoa.utility_wrappers.obs_transforms import (
 )
 from stoa.utility_wrappers.step_limit import EpisodeStepLimitWrapper
 
-# Environment adapters (optional dependencies)
 __all__ = [
     # Version
     "__version__",
@@ -113,59 +112,3 @@ __all__ = [
     "MultiDiscreteToDiscreteWrapper",
     "MultiBoundedToBoundedWrapper",
 ]
-
-try:
-    from stoa.env_adapters.brax import BraxToStoa
-
-    __all__.append("BraxToStoa")
-except ImportError:
-    pass
-
-try:
-    from stoa.env_adapters.gymnax import GymnaxToStoa
-
-    __all__.append("GymnaxToStoa")
-except ImportError:
-    pass
-
-try:
-    from stoa.env_adapters.jumanji import JumanjiToStoa
-
-    __all__.append("JumanjiToStoa")
-except ImportError:
-    pass
-
-try:
-    from stoa.env_adapters.kinetix import KinetixToStoa
-
-    __all__.append("KinetixToStoa")
-except ImportError:
-    pass
-
-try:
-    from stoa.env_adapters.navix import NavixToStoa
-
-    __all__.append("NavixToStoa")
-except ImportError:
-    pass
-
-try:
-    from stoa.env_adapters.pgx import PGXToStoa
-
-    __all__.append("PGXToStoa")
-except ImportError:
-    pass
-
-try:
-    from stoa.env_adapters.playground import MuJoCoPlaygroundToStoa
-
-    __all__.append("MuJoCoPlaygroundToStoa")
-except ImportError:
-    pass
-
-try:
-    from stoa.env_adapters.xminigrid import XMiniGridToStoa
-
-    __all__.append("XMiniGridToStoa")
-except ImportError:
-    pass
