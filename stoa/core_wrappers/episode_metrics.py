@@ -2,6 +2,7 @@ from typing import Dict, Optional, Tuple
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 from chex import Numeric, PRNGKey
 from jax import Array
 
@@ -125,14 +126,17 @@ def get_final_step_metrics(metrics: Dict[str, Array]) -> Tuple[Dict[str, Array],
     we don't know how many episodes have been run. This is done since the logger
     expects arrays for computing summary statistics on the episode metrics.
     """
-    is_final_ep = metrics.pop("is_terminal_step")
-    has_final_ep_step = bool(jnp.any(is_final_ep))
+    is_final_ep = metrics.get("is_terminal_step", np.array([False]))
+    has_final_ep_step = bool(np.any(is_final_ep))
 
     final_metrics: Dict[str, Array]
     # If it didn't make it to the final step, return zeros.
     if not has_final_ep_step:
-        final_metrics = jax.tree_util.tree_map(jnp.zeros_like, metrics)
+        final_metrics = jax.tree.map(np.zeros_like, metrics)
     else:
-        final_metrics = jax.tree_util.tree_map(lambda x: x[is_final_ep], metrics)
+        final_metrics = jax.tree.map(lambda x: x[is_final_ep], metrics)
+
+    # Keep is_terminal_step in the metrics for the logger to use
+    final_metrics["is_terminal_step"] = is_final_ep
 
     return final_metrics, has_final_ep_step
