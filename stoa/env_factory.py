@@ -16,8 +16,8 @@ except ImportError:
 
 import gymnasium
 
-from stoix.wrappers.envpool import EnvPoolToStoa
-from stoix.wrappers.gymnasium import VecGymToStoa
+from stoa.env_adapters.envpool import EnvPoolToStoa
+from stoa.env_adapters.gymnasium import VecGymToStoa
 
 
 class EnvFactory(abc.ABC):

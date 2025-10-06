@@ -22,8 +22,8 @@ from stoa.core_wrappers.vmap import VmapWrapper
 from stoa.core_wrappers.wrapper import AddRNGKey
 from stoa.utility_wrappers.extras_transforms import NoExtrasWrapper
 
-from stoix.utils.env_factory import EnvFactory
-from stoix.wrappers.jax_to_factory import JaxEnvFactory
+from stoa.env_factory import EnvFactory
+from stoa.env_adapters.jax_to_factory import JaxEnvFactory
 
 
 def apply_core_wrappers(env: Environment, config: DictConfig) -> Environment:
@@ -295,7 +295,7 @@ def make_craftax_env(scenario_name: str, config: DictConfig) -> Tuple[Environmen
 
 def make_debug_env(scenario_name: str, config: DictConfig) -> Tuple[Environment, Environment]:
     """Creates a simple debug environment for testing purposes."""
-    from stoix.utils.debug_env import DEBUG_ENVIRONMENTS
+    from stoa.debug_env import DEBUG_ENVIRONMENTS
 
     env = DEBUG_ENVIRONMENTS[scenario_name](**config.env.kwargs)
     eval_env = DEBUG_ENVIRONMENTS[scenario_name](**config.env.kwargs)
@@ -442,7 +442,7 @@ def make_factory(config: DictConfig) -> EnvFactory:
         apply_wrapper_fn = hydra.utils.instantiate(config.env.wrapper, _partial_=True)
 
     if suite_name == "envpool":
-        from stoix.utils.env_factory import EnvPoolFactory
+        from stoa.env_factory import EnvPoolFactory
 
         return EnvPoolFactory(
             scenario_name,
@@ -451,7 +451,7 @@ def make_factory(config: DictConfig) -> EnvFactory:
             **config.env.kwargs,
         )
     elif suite_name == "gymnasium":
-        from stoix.utils.env_factory import GymnasiumFactory
+        from stoa.env_factory import GymnasiumFactory
 
         return GymnasiumFactory(
             scenario_name,

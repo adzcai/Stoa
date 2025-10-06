@@ -5,7 +5,7 @@ import jax
 import numpy as np
 from stoa import Environment, Space, TimeStep
 
-from stoix.utils.env_factory import EnvFactory
+from stoa.env_factory import EnvFactory
 
 
 class JaxToStateful:
