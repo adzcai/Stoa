@@ -45,7 +45,7 @@ def env_maker(
     @functools.wraps(make_env)
     def wrapper(
         *args,
-        wrapper_fn: Callable[[Environment], Environment],
+        wrapper_fn: Callable[[Environment], Environment] | None = None,
         use_optimistic_reset: bool = False,
         num_envs: int | None = None,
         reset_ratio: int = 16,
@@ -384,7 +384,7 @@ ENV_MAKERS = {
 }
 
 
-def make(suite_name: str, scenario_name: str, **kwargs) -> Tuple[Environment, Environment]:
+def make(suite_name: str, scenario_name: str | None = None, **kwargs) -> Tuple[Environment, Environment]:
     """Creates training and evaluation environments based on the provided configuration.
 
     This function uses a dispatcher to call the correct maker function for the
@@ -398,6 +398,8 @@ def make(suite_name: str, scenario_name: str, **kwargs) -> Tuple[Environment, En
     Returns:
         A tuple containing the instantiated training and evaluation environments.
     """
+    if scenario_name is None:
+        suite_name, scenario_name = suite_name.split('/', 1)
 
     if suite_name not in ENV_MAKERS:
         raise ValueError(
@@ -417,8 +419,8 @@ def make(suite_name: str, scenario_name: str, **kwargs) -> Tuple[Environment, En
 
 def make_factory(
     suite_name: str,
-    scenario_name: str,
-    seed: int,
+    scenario_name: str | None = None,
+    seed: int = 0,
     apply_wrapper_fn: Callable = lambda x: x,
     **kwargs,
 ) -> EnvFactory:
@@ -434,6 +436,9 @@ def make_factory(
     Returns:
         An `EnvFactory` instance.
     """
+
+    if scenario_name is None:
+        suite_name, scenario_name = suite_name.split('/', 1)
 
     if suite_name == "envpool":
         from stoa.env_factory import EnvPoolFactory
