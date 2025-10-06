@@ -5,7 +5,7 @@ import jax
 import jax.numpy as jnp
 from chex import PRNGKey
 from kinetix.environment.env import KinetixObservation
-from kinetix.environment.utils import MultiDiscrete
+from kinetix.environment.spaces import MultiDiscrete
 from kinetix.render.renderer_pixels import PixelsObservation
 
 from stoa.env_adapters.base import AdapterStateWithKey
