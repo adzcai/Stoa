@@ -19,9 +19,6 @@ from stoa.core_wrappers.vmap import VmapWrapper
 from stoa.core_wrappers.wrapper import AddRNGKey
 from stoa.utility_wrappers.extras_transforms import NoExtrasWrapper
 
-from stoa.env_factory import EnvFactory
-from stoa.env_adapters.jax_to_factory import JaxEnvFactory
-
 
 def env_maker(
     make_env: Callable[..., Tuple[Environment, Environment]],
@@ -415,51 +412,3 @@ def make(suite_name: str, scenario_name: str | None = None, **kwargs) -> Tuple[E
         f"Scenario: {scenario_name}{Style.RESET_ALL}"
     )
     return envs
-
-
-def make_factory(
-    suite_name: str,
-    scenario_name: str | None = None,
-    seed: int = 0,
-    apply_wrapper_fn: Callable = lambda x: x,
-    **kwargs,
-) -> EnvFactory:
-    """Creates a factory for generating environments.
-
-    This is used for systems that require an environment factory rather than
-    pre-instantiated environments, such as those using non-JAX environments
-    like Gymnasium or EnvPool.
-
-    Args:
-        config: The system configuration.
-
-    Returns:
-        An `EnvFactory` instance.
-    """
-
-    if scenario_name is None:
-        suite_name, scenario_name = suite_name.split('/', 1)
-
-    if suite_name == "envpool":
-        from stoa.env_factory import EnvPoolFactory
-
-        return EnvPoolFactory(
-            scenario_name,
-            init_seed=seed,
-            apply_wrapper_fn=apply_wrapper_fn,
-            **kwargs,
-        )
-    elif suite_name == "gymnasium":
-        from stoa.env_factory import GymnasiumFactory
-
-        return GymnasiumFactory(
-            scenario_name,
-            init_seed=seed,
-            apply_wrapper_fn=apply_wrapper_fn,
-            **kwargs,
-        )
-    else:
-        # For all other JAX-based environments, create a single instance
-        # and wrap it in a JaxEnvFactory.
-        train_env = make(suite_name, scenario_name, **kwargs)[0]
-        return JaxEnvFactory(train_env, init_seed=seed, apply_wrapper_fn=apply_wrapper_fn)
