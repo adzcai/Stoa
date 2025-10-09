@@ -93,6 +93,7 @@ version = {attr = "stoa.__version__"}
 [tool.uv.sources]
 xminigrid = { git = "https://github.com/corl-team/xland-minigrid.git", rev = "main" }
 gymnax = { git = " git+https://github.com/RobertTLange/gymnax.git", rev = "main" }
+jaxmaze = { git = "https://github.com/adzcai/JaxMaze.git", rev = "main" }
 
 [project]
 name = "stoa-env"
@@ -131,6 +132,7 @@ kinetix = ["kinetix-env"]
 navix = ["navix>=0.7.0"]
 pgx = ["pgx>=2.6.0"]
 xminigrid = ["xminigrid"]
+jaxmaze = ["jaxmaze"]
 all = [
     "stoa-env[brax]",
     "stoa-env[gymnax]",
@@ -139,6 +141,7 @@ all = [
     "stoa-env[navix]",
     "stoa-env[pgx]",
     "stoa-env[xminigrid]",
+    "stoa-env[jaxmaze]",
 ]
 dev = [
     "black",

@@ -311,6 +311,24 @@ def make_playground_env(
     return env
 
 
+def make_jax_maze_env(
+    scenario_name: str, train_test_pairs: list[tuple[str, str]], **env_kwargs
+) -> Environment:
+    from housemaze.human_dyna.experiments import make_human_experiments_block
+    from housemaze.human_dyna.multitask_env import HouseMaze, TaskRunner
+    from housemaze.utils import load_image_dict
+
+    from stoa.env_adapters.jaxmaze import JaxMazeToStoa
+
+    train_params, eval_params, task_objects, _ = make_human_experiments_block(
+        {}, train_test_pairs, **env_kwargs
+    )
+    task_runner = TaskRunner(task_objects)
+    env = HouseMaze(task_runner, num_categories=len(load_image_dict()["keys"]))
+    env = JaxMazeToStoa(env, train_params, eval_params)
+    return env
+
+
 # A dispatcher mapping environment suite names to their respective maker functions.
 ENV_MAKERS = {
     "jumanji": make_jumanji_env,
@@ -323,6 +341,7 @@ ENV_MAKERS = {
     "navix": make_navix_env,
     "kinetix": make_kinetix_env,
     "mujoco_playground": make_playground_env,
+    "jaxmaze": make_jax_maze_env,
     "debug": make_debug_env,
 }
 
