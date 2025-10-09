@@ -1,8 +1,9 @@
 import dataclasses
 import functools
-from typing import Any, Callable, ParamSpec, Tuple
+from typing import Any, Callable, Tuple
 
 from colorama import Fore, Style
+
 from stoa import (
     AddStartFlagAndPrevAction,
     AutoResetWrapper,
@@ -20,9 +21,7 @@ from stoa.core_wrappers.wrapper import AddRNGKey
 from stoa.utility_wrappers.extras_transforms import NoExtrasWrapper
 
 
-def env_maker(
-    make_env: Callable[..., Tuple[Environment, Environment]],
-) -> Callable[..., Tuple[Environment, Environment]]:
+def env_maker(make_env: Callable[..., Environment]) -> Callable[..., Environment]:
     """Applies core wrappers for JAX-based environments and any user-defined optional wrappers from the configuration.
 
     This includes wrappers for:
@@ -48,19 +47,20 @@ def env_maker(
         reset_ratio: int = 16,
         use_cached_auto_reset: bool = False,
         **kwargs,
-    ) -> Tuple[Environment, Environment]:
-        env, eval_env = make_env(*args, **kwargs)
+    ) -> Environment:
+        env = make_env(*args, **kwargs)
 
         if wrapper_fn is not None:
             env = wrapper_fn(env)
-            eval_env = wrapper_fn(eval_env)
 
         env = AddRNGKey(env)
         env = RecordEpisodeMetrics(env)
 
         if use_optimistic_reset:
             if num_envs is None:
-                raise ValueError("num_envs must be specified when using optimistic reset.")
+                raise ValueError(
+                    "num_envs must be specified when using optimistic reset."
+                )
             env = OptimisticResetVmapWrapper(
                 env,
                 num_envs,
@@ -73,44 +73,40 @@ def env_maker(
             else:
                 env = AutoResetWrapper(env, next_obs_in_extras=True)
             env = VmapWrapper(env)
-
-        return env, eval_env
+        return env
 
     return wrapper
 
 
-@env_maker
 def make_jumanji_env(
     scenario_name: str,
     multi_agent: bool = False,
     observation_attribute: str | None = None,
     **env_kwargs,
-) -> Tuple[Environment, Environment]:
+) -> Environment:
     """Creates and wraps a Jumanji environment."""
     import jumanji
     import jumanji.wrappers as jumanji_wrappers
+
     from stoa.env_adapters.jumanji import JumanjiToStoa
 
     env = jumanji.make(scenario_name, **env_kwargs)
-    eval_env = jumanji.make(scenario_name, **env_kwargs)
 
     if multi_agent:
         env = jumanji_wrappers.MultiToSingleWrapper(env)
-        eval_env = jumanji_wrappers.MultiToSingleWrapper(eval_env)
 
     if observation_attribute is None:
-        raise ValueError("observation_attribute must be specified for Jumanji environments.")
+        raise ValueError(
+            "observation_attribute must be specified for Jumanji environments."
+        )
 
     env = JumanjiToStoa(env)
     env = ObservationExtractWrapper(env, observation_attribute)
-    eval_env = JumanjiToStoa(eval_env)
-    eval_env = ObservationExtractWrapper(eval_env, observation_attribute)
 
     if isinstance(env.action_space(), MultiDiscreteSpace):
         env = MultiDiscreteToDiscreteWrapper(env)
-        eval_env = MultiDiscreteToDiscreteWrapper(eval_env)
 
-    return env, eval_env
+    return env
 
 
 def _create_gymnax_env_instance(
@@ -131,88 +127,78 @@ def _create_gymnax_env_instance(
     return env, env_params
 
 
-@env_maker
-def make_gymnax_env(scenario_name: str, **env_kwargs) -> Tuple[Environment, Environment]:
+def make_gymnax_env(scenario_name: str, **env_kwargs) -> Environment:
     """Creates and wraps a Gymnax environment."""
     import gymnax
+
     from stoa.env_adapters.gymnax import GymnaxToStoa
 
-    env, env_params = _create_gymnax_env_instance(scenario_name, env_kwargs, gymnax.make)
-    eval_env, eval_env_params = _create_gymnax_env_instance(scenario_name, env_kwargs, gymnax.make)
+    env, env_params = _create_gymnax_env_instance(
+        scenario_name, env_kwargs, gymnax.make
+    )
 
     env = GymnaxToStoa(env, env_params)
-    eval_env = GymnaxToStoa(eval_env, eval_env_params)
     env = NoExtrasWrapper(env)
-    eval_env = NoExtrasWrapper(eval_env)
-    return env, eval_env
+    return env
 
 
-@env_maker
-def make_popgym_arcade_env(scenario_name: str, **env_kwargs) -> Tuple[Environment, Environment]:
+def make_popgym_arcade_env(scenario_name: str, **env_kwargs) -> Environment:
     """Creates and wraps a PopGym Arcade environment."""
     import popgym_arcade
+
     from stoa.env_adapters.gymnax import GymnaxToStoa
 
-    env, env_params = _create_gymnax_env_instance(scenario_name, env_kwargs, popgym_arcade.make)
-    eval_env, eval_env_params = _create_gymnax_env_instance(
+    env, env_params = _create_gymnax_env_instance(
         scenario_name, env_kwargs, popgym_arcade.make
     )
 
     env = GymnaxToStoa(env, env_params)
-    eval_env = GymnaxToStoa(eval_env, eval_env_params)
     env = NoExtrasWrapper(env)
-    eval_env = NoExtrasWrapper(eval_env)
-    return env, eval_env
+    return env
 
 
-@env_maker
-def make_xland_minigrid_env(scenario_name: str, **env_kwargs) -> Tuple[Environment, Environment]:
+def make_xland_minigrid_env(scenario_name: str, **env_kwargs) -> Environment:
     """Creates and wraps an XLand-MiniGrid environment."""
     import xminigrid
+
     from stoa.env_adapters.xminigrid import XMiniGridToStoa
 
     env, env_params = xminigrid.make(scenario_name, **env_kwargs)
-    eval_env, eval_env_params = xminigrid.make(scenario_name, **env_kwargs)
 
     env = XMiniGridToStoa(env, env_params)
-    eval_env = XMiniGridToStoa(eval_env, eval_env_params)
     env = NoExtrasWrapper(env)
-    eval_env = NoExtrasWrapper(eval_env)
-    return env, eval_env
+    return env
 
 
-@env_maker
-def make_brax_env(scenario_name: str, **env_kwargs) -> Tuple[Environment, Environment]:
+def make_brax_env(scenario_name: str, **env_kwargs) -> Environment:
     """Creates and wraps a Brax environment."""
     from brax.envs import create as brax_make
+
     from stoa.env_adapters.brax import BraxToStoa
 
     env = brax_make(scenario_name, auto_reset=False, **env_kwargs)
-    eval_env = brax_make(scenario_name, auto_reset=False, **env_kwargs)
 
     env = BraxToStoa(env)
-    eval_env = BraxToStoa(eval_env)
     env = NoExtrasWrapper(env)
-    eval_env = NoExtrasWrapper(eval_env)
-    return env, eval_env
+    return env
 
 
-@env_maker
 def make_kinetix_env(
     scenario_name: str,
     dense_reward_scale: float,
     frame_skip: int,
     scenario: Any,
     kinetix: Any,
-) -> Tuple[Environment, Environment]:
+) -> Environment:
     """Creates and wraps a Kinetix environment."""
     import jax
     from kinetix.environment import EnvState, StaticEnvParams, make_kinetix_env
     from kinetix.environment.env import KinetixEnv
-    from kinetix.environment.ued.ued import make_reset_fn_sample_kinetix_level
     from kinetix.environment.spaces import ActionType, ObservationType
+    from kinetix.environment.ued.ued import make_reset_fn_sample_kinetix_level
     from kinetix.util.config import generate_params_from_config
     from kinetix.util.saving import load_evaluation_levels
+
     from stoa.env_adapters.kinetix import KinetixToStoa
 
     env_params, override_static_env_params = generate_params_from_config(
@@ -246,7 +232,6 @@ def make_kinetix_env(
         return reset, static_env_params
 
     reset_fn_train, static_env_params_train = _get_static_params_and_reset_fn(kinetix.train)
-    reset_fn_eval, static_env_params_eval = _get_static_params_and_reset_fn(kinetix.eval)
 
     def _make_env(reset_fn: Callable, static_env_params: StaticEnvParams) -> KinetixEnv:
         env = make_kinetix_env(
@@ -260,91 +245,72 @@ def make_kinetix_env(
         return KinetixToStoa(env, env_params)
 
     env = _make_env(reset_fn=reset_fn_train, static_env_params=static_env_params_train)
-    eval_env = _make_env(reset_fn=reset_fn_eval, static_env_params=static_env_params_eval)
-
     env = NoExtrasWrapper(env)
-    eval_env = NoExtrasWrapper(eval_env)
-    return env, eval_env
+    return env
 
 
-@env_maker
-def make_craftax_env(scenario_name: str) -> Tuple[Environment, Environment]:
+def make_craftax_env(scenario_name: str) -> Environment:
     """Creates and wraps a Crafter (Craftax) environment."""
     from craftax.craftax_env import make_craftax_env_from_name
+
     from stoa.env_adapters.gymnax import GymnaxToStoa
 
     env = make_craftax_env_from_name(scenario_name, auto_reset=False)
-    eval_env = make_craftax_env_from_name(scenario_name, auto_reset=False)
     env_params = env.default_params
-    eval_env_params = eval_env.default_params
 
     env = GymnaxToStoa(env, env_params)
-    eval_env = GymnaxToStoa(eval_env, eval_env_params)
     env = NoExtrasWrapper(env)
-    eval_env = NoExtrasWrapper(eval_env)
-    return env, eval_env
+    return env
 
 
-@env_maker
-def make_debug_env(scenario_name: str, **env_kwargs) -> Tuple[Environment, Environment]:
+def make_debug_env(scenario_name: str, **env_kwargs) -> Environment:
     """Creates a simple debug environment for testing purposes."""
     from stoa.debug_env import DEBUG_ENVIRONMENTS
 
     env = DEBUG_ENVIRONMENTS[scenario_name](**env_kwargs)
-    eval_env = DEBUG_ENVIRONMENTS[scenario_name](**env_kwargs)
-    return env, eval_env
+    return env
 
 
-@env_maker
-def make_popjym_env(scenario_name: str, **env_kwargs) -> Tuple[Environment, Environment]:
+def make_popjym_env(scenario_name: str, **env_kwargs) -> Environment:
     """Creates and wraps a POPJym environment."""
     import popjym
+
     from stoa.env_adapters.gymnax import GymnaxToStoa
 
     env, env_params = popjym.make(scenario_name, **env_kwargs)
-    eval_env, eval_env_params = popjym.make(scenario_name, **env_kwargs)
 
     env = GymnaxToStoa(env, env_params)
-    eval_env = GymnaxToStoa(eval_env, eval_env_params)
     env = NoExtrasWrapper(env)
-    eval_env = NoExtrasWrapper(eval_env)
     env = AddStartFlagAndPrevAction(env)
-    eval_env = AddStartFlagAndPrevAction(eval_env)
-    return env, eval_env
+    return env
 
 
-@env_maker
-def make_navix_env(scenario_name: str, **env_kwargs) -> Tuple[Environment, Environment]:
+def make_navix_env(scenario_name: str, **env_kwargs) -> Environment:
     """Creates and wraps a Navix environment."""
     import navix
+
     from stoa.env_adapters.navix import NavixToStoa
 
     env = navix.make(scenario_name, **env_kwargs)
-    eval_env = navix.make(scenario_name, **env_kwargs)
 
     env = NavixToStoa(env)
-    eval_env = NavixToStoa(eval_env)
     env = NoExtrasWrapper(env)
-    eval_env = NoExtrasWrapper(eval_env)
-    return env, eval_env
+    return env
 
 
-@env_maker
 def make_playground_env(
     scenario_name: str,
     use_default_domain_randomizer: bool = False,
     max_episode_steps: int = 1000,
     **env_kwargs,
-) -> Tuple[Environment, Environment]:
+) -> Environment:
     """Creates and wraps a MuJoCo Playground environment."""
     import mujoco_playground
+
     from stoa.env_adapters.playground import MuJoCoPlaygroundToStoa
 
     env_cfg = mujoco_playground.registry.get_default_config(scenario_name)
     env = mujoco_playground.registry.load(
-        scenario_name, config=env_cfg, config_overrides=env_kwargs
-    )
-    eval_env = mujoco_playground.registry.load(
         scenario_name, config=env_cfg, config_overrides=env_kwargs
     )
 
@@ -357,12 +323,9 @@ def make_playground_env(
         )
 
     env = MuJoCoPlaygroundToStoa(env, domain_randomizer_fn=domain_randomizer_fn)
-    eval_env = MuJoCoPlaygroundToStoa(eval_env, domain_randomizer_fn=domain_randomizer_fn)
     env = EpisodeStepLimitWrapper(env, max_episode_steps)
-    eval_env = EpisodeStepLimitWrapper(eval_env, max_episode_steps)
     env = NoExtrasWrapper(env)
-    eval_env = NoExtrasWrapper(eval_env)
-    return env, eval_env
+    return env
 
 
 # A dispatcher mapping environment suite names to their respective maker functions.
@@ -381,7 +344,7 @@ ENV_MAKERS = {
 }
 
 
-def make(suite_name: str, scenario_name: str | None = None, **kwargs) -> Tuple[Environment, Environment]:
+def make(suite_name: str, scenario_name: str | None = None, **kwargs) -> Environment:
     """Creates training and evaluation environments based on the provided configuration.
 
     This function uses a dispatcher to call the correct maker function for the
@@ -396,7 +359,7 @@ def make(suite_name: str, scenario_name: str | None = None, **kwargs) -> Tuple[E
         A tuple containing the instantiated training and evaluation environments.
     """
     if scenario_name is None:
-        suite_name, scenario_name = suite_name.split('/', 1)
+        suite_name, scenario_name = suite_name.split("/", 1)
 
     if suite_name not in ENV_MAKERS:
         raise ValueError(
@@ -405,10 +368,21 @@ def make(suite_name: str, scenario_name: str | None = None, **kwargs) -> Tuple[E
         )
 
     maker_function = ENV_MAKERS[suite_name]
-    envs = maker_function(scenario_name, **kwargs)
+    env = maker_function(scenario_name, **kwargs)
 
     print(
         f"{Fore.YELLOW}{Style.BRIGHT}Created environments for Suite: {suite_name} - "
         f"Scenario: {scenario_name}{Style.RESET_ALL}"
     )
-    return envs
+    return env
+            f"Available suites: {list(ENV_MAKERS.keys())}"
+        )
+
+    maker_function = ENV_MAKERS[suite_name]
+    env = maker_function(scenario_name, **kwargs)
+
+    print(
+        f"{Fore.YELLOW}{Style.BRIGHT}Created environments for Suite: {suite_name} - "
+        f"Scenario: {scenario_name}{Style.RESET_ALL}"
+    )
+    return env
