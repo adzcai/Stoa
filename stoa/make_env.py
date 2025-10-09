@@ -58,9 +58,7 @@ def apply_core_wrappers(
 
     if use_optimistic_reset:
         if num_envs is None:
-            raise ValueError(
-                "num_envs must be specified when using optimistic reset."
-            )
+            raise ValueError("num_envs must be specified when using optimistic reset.")
         env = OptimisticResetVmapWrapper(
             env,
             num_envs,
@@ -94,9 +92,7 @@ def make_jumanji_env(
         env = jumanji_wrappers.MultiToSingleWrapper(env)
 
     if observation_attribute is None:
-        raise ValueError(
-            "observation_attribute must be specified for Jumanji environments."
-        )
+        raise ValueError("observation_attribute must be specified for Jumanji environments.")
 
     env = JumanjiToStoa(env)
     env = ObservationExtractWrapper(env, observation_attribute)
@@ -131,9 +127,7 @@ def make_gymnax_env(scenario_name: str, **env_kwargs) -> Environment:
 
     from stoa.env_adapters.gymnax import GymnaxToStoa
 
-    env, env_params = _create_gymnax_env_instance(
-        scenario_name, env_kwargs, gymnax.make
-    )
+    env, env_params = _create_gymnax_env_instance(scenario_name, env_kwargs, gymnax.make)
 
     env = GymnaxToStoa(env, env_params)
     env = NoExtrasWrapper(env)
@@ -146,9 +140,7 @@ def make_popgym_arcade_env(scenario_name: str, **env_kwargs) -> Environment:
 
     from stoa.env_adapters.gymnax import GymnaxToStoa
 
-    env, env_params = _create_gymnax_env_instance(
-        scenario_name, env_kwargs, popgym_arcade.make
-    )
+    env, env_params = _create_gymnax_env_instance(scenario_name, env_kwargs, popgym_arcade.make)
 
     env = GymnaxToStoa(env, env_params)
     env = NoExtrasWrapper(env)
@@ -362,17 +354,6 @@ def make(suite_name: str, scenario_name: str | None = None, **kwargs) -> Environ
     if suite_name not in ENV_MAKERS:
         raise ValueError(
             f"Unsupported environment suite '{suite_name}'. "
-            f"Available suites: {list(ENV_MAKERS.keys())}"
-        )
-
-    maker_function = ENV_MAKERS[suite_name]
-    env = maker_function(scenario_name, **kwargs)
-
-    print(
-        f"{Fore.YELLOW}{Style.BRIGHT}Created environments for Suite: {suite_name} - "
-        f"Scenario: {scenario_name}{Style.RESET_ALL}"
-    )
-    return env
             f"Available suites: {list(ENV_MAKERS.keys())}"
         )
 
