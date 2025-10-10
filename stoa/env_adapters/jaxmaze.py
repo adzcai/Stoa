@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Tuple
 
 import jax
@@ -16,10 +17,11 @@ from stoa.environment import Environment
 from stoa.spaces import DictSpace, DiscreteSpace, Space
 
 
+IMAGE_DICT = load_image_dict()
+
 class JaxMazeToStoa(Environment):
     def __init__(self, env: HouseMaze, train_params: EnvParams, test_params: EnvParams):
         self._env = env
-        self._image_dict = load_image_dict()
         self._train_params = train_params
         self._test_params = test_params
 
@@ -87,16 +89,15 @@ class JaxMazeToStoa(Environment):
         self, env_params: bool | None = None
     ) -> Space:
         height, width = self.params(env_params).reset_params.map_init.grid.shape[-3:-1]
+        UInt8Space = partial(DiscreteSpace, dtype=jnp.uint8)
         return DictSpace(
             {
-                "image": DiscreteSpace(self.num_objects + 2, shape=(height, width)),
-                "task_w": DiscreteSpace(2, shape=(self.num_objects,)),
-                "state_features": DiscreteSpace(2, shape=(self.num_objects)),
-                "position": DiscreteSpace(max(height, width), shape=(2,)),
-                "direction": DiscreteSpace(len(DIR_TO_VEC)),
-                "prev_action": DiscreteSpace(
-                    self._env.num_actions(env_params) + 1  # pyright: ignore[reportArgumentType]
-                ),
+                "image": UInt8Space(self.num_objects + 2, shape=(height, width)),
+                "task_w": UInt8Space(2, shape=(self.num_objects,)),
+                "state_features": UInt8Space(2, shape=(self.num_objects)),
+                "position": UInt8Space(max(height, width), shape=(2,)),
+                "direction": UInt8Space(len(DIR_TO_VEC)),
+                "prev_action": UInt8Space(self._env.num_actions() + 1),
             }
         )
 
@@ -117,6 +118,6 @@ class JaxMazeToStoa(Environment):
             state.observation.image,
             state.observation.position,  # pyright: ignore[reportArgumentType]
             state.observation.direction,  # pyright: ignore[reportArgumentType]
-            self._image_dict,
+            IMAGE_DICT,
         )
         return video.transpose((2, 0, 1))  # C H W
