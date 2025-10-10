@@ -27,6 +27,7 @@ def apply_core_wrappers(
     num_envs: int | None = None,
     reset_ratio: int = 16,
     use_cached_auto_reset: bool = False,
+    keep_terminal: bool = False,
 ) -> Environment:
     """Applies core wrappers for JAX-based environments and any user-defined optional wrappers from the configuration.
 
@@ -55,16 +56,13 @@ def apply_core_wrappers(
         if num_envs is None:
             raise ValueError("num_envs must be specified when using optimistic reset.")
         env = OptimisticResetVmapWrapper(
-            env,
-            num_envs,
-            min(reset_ratio, num_envs),
-            next_obs_in_extras=True,
+            env, num_envs, min(reset_ratio, num_envs), keep_terminal=keep_terminal
         )
     else:
         if use_cached_auto_reset:
-            env = CachedAutoResetWrapper(env, next_obs_in_extras=True)
+            env = CachedAutoResetWrapper(env, keep_terminal=keep_terminal)
         else:
-            env = AutoResetWrapper(env, next_obs_in_extras=True)
+            env = AutoResetWrapper(env, keep_terminal=keep_terminal)
         env = VmapWrapper(env)
     return env
 
