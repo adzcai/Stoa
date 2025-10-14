@@ -1,28 +1,28 @@
 import abc
-from typing import Any, Optional, Tuple
+from typing import Any, Generic, Optional, Tuple
 
 import jax.numpy as jnp
 from chex import PRNGKey, dataclass
 
-from stoa.env_types import Action, EnvParams, State, TimeStep
+from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.spaces import BoundedArraySpace, EnvironmentSpace, Space
 
 
 @dataclass
-class Environment:
+class Environment(Generic[State, Observation, Action]):
     """Abstract base class for JAX-native RL environments."""
 
     @abc.abstractmethod
     def reset(
         self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    ) -> Tuple[State, TimeStep[Observation]]:
         """Resets the environment to an initial state."""
         pass
 
     @abc.abstractmethod
     def step(
         self, state: State, action: Action, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    ) -> Tuple[State, TimeStep[Observation]]:
         """Updates the environment according to the agent's action."""
         pass
 

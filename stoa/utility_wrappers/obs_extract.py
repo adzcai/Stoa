@@ -3,12 +3,12 @@ from typing import Any, Optional, Tuple
 from chex import PRNGKey
 
 from stoa.core_wrappers.wrapper import Wrapper
-from stoa.env_types import Action, EnvParams, State, TimeStep
+from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import Space
 
 
-class ObservationExtractWrapper(Wrapper[State]):
+class ObservationExtractWrapper(Wrapper[State, Observation, Action]):
     """
     Extracts a specific attribute from dict or named tuple observations.
 
@@ -93,9 +93,7 @@ class ObservationExtractWrapper(Wrapper[State]):
                 f"or object with the specified attribute."
             )
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         """
         Reset the environment and extract the desired observation attribute.
 

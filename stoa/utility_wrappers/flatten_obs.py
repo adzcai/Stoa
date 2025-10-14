@@ -3,14 +3,13 @@ from typing import Optional, Tuple
 import jax.numpy as jnp
 import numpy as np
 from chex import PRNGKey
-
 from stoa.core_wrappers.wrapper import Wrapper
 from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import ArraySpace, BoundedArraySpace, Space
 
 
-class FlattenObservationWrapper(Wrapper[State]):
+class FlattenObservationWrapper(Wrapper[State, Observation, Action]):
     """Simple wrapper that flattens observations to 1D arrays.
 
     This wrapper flattens multi-dimensional observations into 1D vectors,
@@ -64,9 +63,7 @@ class FlattenObservationWrapper(Wrapper[State]):
         new_timestep: TimeStep = timestep.replace(observation=flattened_obs)  # type: ignore
         return new_timestep
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         """Reset the environment and flatten the observation.
 
         Args:
@@ -127,18 +124,22 @@ class FlattenObservationWrapper(Wrapper[State]):
                 dtype=jnp.float32,
                 minimum=flattened_minimum,
                 maximum=flattened_maximum,
-                name=f"flattened_{original_space.name}"
-                if original_space.name
-                else "flattened_observation",
+                name=(
+                    f"flattened_{original_space.name}"
+                    if original_space.name
+                    else "flattened_observation"
+                ),
             )
 
         elif isinstance(original_space, ArraySpace):
             return ArraySpace(
                 shape=self._flattened_shape,
                 dtype=jnp.float32,
-                name=f"flattened_{original_space.name}"
-                if original_space.name
-                else "flattened_observation",
+                name=(
+                    f"flattened_{original_space.name}"
+                    if original_space.name
+                    else "flattened_observation"
+                ),
             )
 
         else:

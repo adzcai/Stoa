@@ -5,7 +5,7 @@ import jax.numpy as jnp
 from chex import PRNGKey
 
 from stoa.core_wrappers.wrapper import Wrapper, WrapperState, wrapper_state_replace
-from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
+from stoa.env_types import Action, Done, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
 from stoa.stoa_struct import dataclass
 
@@ -29,7 +29,7 @@ def add_obs_to_extras(timestep: TimeStep) -> TimeStep:
     return timestep.replace(extras=extras)  # type: ignore
 
 
-class AutoResetWrapper(Wrapper[State]):
+class AutoResetWrapper(Wrapper[State, Observation, Action]):
     """Automatically resets the environment when episodes terminate.
 
     This wrapper intercepts terminal timesteps and automatically calls reset(),
@@ -51,9 +51,7 @@ class AutoResetWrapper(Wrapper[State]):
         super().__init__(env)
         self.keep_terminal = keep_terminal
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: EnvParams | None = None
-    ) -> tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: EnvParams | None = None) -> tuple[State, TimeStep]:
         """Reset the environment.
 
         Args:
@@ -73,9 +71,7 @@ class AutoResetWrapper(Wrapper[State]):
             timestep = add_obs_to_extras(timestep)
         return state, timestep
 
-    def step(
-        self, state: State, action: Action, env_params: EnvParams | None = None
-    ) -> tuple[State, TimeStep]:
+    def step(self, state: State, action: Action, env_params: EnvParams | None = None) -> tuple[State, TimeStep]:
         """Step the environment with automatic resetting on termination or truncation.
 
         If the episode terminates after the step, the environment is automatically
@@ -130,7 +126,7 @@ class CachedAutoResetState(WrapperState):
     cached_timestep: TimeStep
 
 
-class CachedAutoResetWrapper(Wrapper[CachedAutoResetState]):
+class CachedAutoResetWrapper(Wrapper[CachedAutoResetState, Observation, Action]):
     """Auto-reset wrapper that caches the initial reset for repeated use."""
 
     def __init__(self, env: Environment, keep_terminal: bool = False):
@@ -161,7 +157,7 @@ class CachedAutoResetWrapper(Wrapper[CachedAutoResetState]):
         if self.keep_terminal:
             state, done = state
 
-            def auto_reset(state, action, env_params):
+            def auto_reset_keep(state, action, env_params) -> tuple[tuple[State, Done], TimeStep[State]]:
                 state = state.replace(base_env_state=state.cached_state)
                 return (state, jnp.asarray(False)), state.cached_timestep
 
@@ -170,7 +166,7 @@ class CachedAutoResetWrapper(Wrapper[CachedAutoResetState]):
                 state = state.replace(base_env_state=env_state)
                 return (state, step_timestep.done()), step_timestep
 
-            return jax.lax.cond(done, auto_reset, no_reset, state, action, env_params)
+            return jax.lax.cond(done, auto_reset_keep, no_reset, state, action, env_params)
 
         else:
             env_state, timestep = self._env.step(state.base_env_state, action, env_params)

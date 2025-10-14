@@ -1541,6 +1541,18 @@ wheels = [
 ]
 
 [[package]]
+name = "jaxmaze"
+version = "0.0.2"
+source = { git = "https://github.com/adzcai/JaxMaze.git?rev=main#5d24c7c42f9d67314ad6d9b9cd05a32d49d7be50" }
+dependencies = [
+    { name = "distrax" },
+    { name = "flax" },
+    { name = "jax" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+]
+
+[[package]]
 name = "jaxopt"
 version = "0.8.5"
 source = { registry = "https://pypi.org/simple" }
@@ -4362,6 +4374,7 @@ all = [
     { name = "brax" },
     { name = "gymnasium" },
     { name = "gymnax" },
+    { name = "jaxmaze" },
     { name = "jumanji" },
     { name = "kinetix-env" },
     { name = "navix" },
@@ -4403,6 +4416,9 @@ gymnax = [
     { name = "gymnasium" },
     { name = "gymnax" },
 ]
+jaxmaze = [
+    { name = "jaxmaze" },
+]
 jumanji = [
     { name = "jumanji" },
 ]
@@ -4419,6 +4435,11 @@ xminigrid = [
     { name = "xminigrid" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "mypy" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "black", marker = "extra == 'dev'" },
@@ -4433,6 +4454,7 @@ requires-dist = [
     { name = "isort", marker = "extra == 'dev'" },
     { name = "jax", specifier = ">=0.4.25" },
     { name = "jaxlib", specifier = ">=0.5.3" },
+    { name = "jaxmaze", marker = "extra == 'jaxmaze'", git = "https://github.com/adzcai/JaxMaze.git?rev=main" },
     { name = "jaxtyping", specifier = ">=0.3.3" },
     { name = "jumanji", marker = "extra == 'jumanji'", specifier = ">=1.1.1" },
     { name = "kinetix-env", marker = "extra == 'kinetix'" },
@@ -4460,6 +4482,7 @@ requires-dist = [
     { name = "pytype", marker = "extra == 'dev'" },
     { name = "stoa-env", extras = ["brax"], marker = "extra == 'all'" },
     { name = "stoa-env", extras = ["gymnax"], marker = "extra == 'all'" },
+    { name = "stoa-env", extras = ["jaxmaze"], marker = "extra == 'all'" },
     { name = "stoa-env", extras = ["jumanji"], marker = "extra == 'all'" },
     { name = "stoa-env", extras = ["kinetix"], marker = "extra == 'all'" },
     { name = "stoa-env", extras = ["navix"], marker = "extra == 'all'" },
@@ -4468,7 +4491,10 @@ requires-dist = [
     { name = "testfixtures", marker = "extra == 'dev'" },
     { name = "xminigrid", marker = "extra == 'xminigrid'", git = "https://github.com/corl-team/xland-minigrid.git?rev=main" },
 ]
-provides-extras = ["brax", "gymnax", "jumanji", "kinetix", "navix", "pgx", "xminigrid", "all", "dev"]
+provides-extras = ["brax", "gymnax", "jumanji", "kinetix", "navix", "pgx", "xminigrid", "jaxmaze", "all", "dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "mypy", specifier = ">=1.18.2" }]
 
 [[package]]
 name = "svgwrite"

@@ -3,13 +3,12 @@ from typing import Any, Dict, List, Optional, Tuple
 import jax
 import jax.numpy as jnp
 from chex import PRNGKey
-
 from stoa.core_wrappers.wrapper import Wrapper
-from stoa.env_types import Action, EnvParams, State, TimeStep
+from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
 
 
-class ConsistentExtrasWrapper(Wrapper[State]):
+class ConsistentExtrasWrapper(Wrapper[State, Observation, Action]):
     """Ensures TimeStep.extras has consistent structure for JAX scanning.
 
     This wrapper performs a single dummy step during initialization to discover
@@ -64,9 +63,7 @@ class ConsistentExtrasWrapper(Wrapper[State]):
         filled.update(extras)
         return filled
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         state, timestep = self._env.reset(rng_key, env_params)
         return state, timestep.replace(extras=self._fill_extras(timestep.extras))  # type: ignore
 
@@ -77,7 +74,7 @@ class ConsistentExtrasWrapper(Wrapper[State]):
         return new_state, timestep.replace(extras=self._fill_extras(timestep.extras))  # type: ignore
 
 
-class SpecificExtrasWrapper(Wrapper[State]):
+class SpecificExtrasWrapper(Wrapper[State, Observation, Action]):
     """Ensures TimeStep.extras has specific keys with None values when missing.
 
     This wrapper selects only specific keys from the base environment's extras
@@ -114,9 +111,7 @@ class SpecificExtrasWrapper(Wrapper[State]):
         selected_extras = {key: extras.get(key) for key in self._extras_keys}
         return selected_extras
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         """
         Resets the environment and filters the extras of the resulting TimeStep.
 
@@ -160,12 +155,10 @@ class SpecificExtrasWrapper(Wrapper[State]):
         return new_state, timestep.replace(extras=filtered_extras)  # type: ignore
 
 
-class NoExtrasWrapper(Wrapper[State]):
+class NoExtrasWrapper(Wrapper[State, Observation, Action]):
     """Removes all base environment extras by setting TimeStep.extras to an empty dict."""
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         """
         Resets the environment and returns a TimeStep with empty extras.
 

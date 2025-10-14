@@ -11,15 +11,15 @@ from housemaze.human_dyna.multitask_env import TimeStep as MazeStep
 from housemaze.renderer import create_image_from_grid
 from housemaze.utils import load_image_dict
 
-from stoa.core_wrappers.wrapper import StateWithKey
-from stoa.env_types import Action, StepType, TimeStep
+from stoa.env_types import Action, DiscreteAction, Observation, StepType, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import DictSpace, DiscreteSpace, Space
-
+from stoa.env_adapters.base import AdapterStateWithKey
 
 IMAGE_DICT = load_image_dict()
 
-class JaxMazeToStoa(Environment):
+
+class JaxMazeToStoa(Environment[AdapterStateWithKey, Observation, DiscreteAction]):
     def __init__(self, env: HouseMaze, train_params: EnvParams, test_params: EnvParams):
         self._env = env
         self._train_params = train_params
@@ -47,7 +47,7 @@ class JaxMazeToStoa(Environment):
 
     def reset(  # pyright: ignore[reportIncompatibleMethodOverride]
         self, rng_key: PRNGKey, env_params: bool | None = None
-    ) -> Tuple[StateWithKey, TimeStep]:
+    ) -> Tuple[AdapterStateWithKey, TimeStep]:
         rng_key, reset_key = jax.random.split(rng_key)
         raw_timestep = self._env.reset(reset_key, self.params(env_params))
         timestep = TimeStep(
@@ -56,11 +56,11 @@ class JaxMazeToStoa(Environment):
             discount=jnp.array(1.0, dtype=jnp.float32),
             observation=self.format_obs(raw_timestep),
         )
-        return StateWithKey(raw_timestep, rng_key), timestep
+        return AdapterStateWithKey(raw_timestep, rng_key), timestep
 
     def step(  # pyright: ignore[reportIncompatibleMethodOverride]
-        self, state: StateWithKey, action: Action, env_params: bool | None = None
-    ) -> tuple[StateWithKey, TimeStep]:
+        self, state: AdapterStateWithKey, action: DiscreteAction, env_params: bool | None = None
+    ) -> tuple[AdapterStateWithKey, TimeStep]:
         rng_key, step_key = jax.random.split(state.rng_key)
         raw_timestep = self._env.step(
             step_key,
@@ -78,7 +78,7 @@ class JaxMazeToStoa(Environment):
             [StepType.FIRST, StepType.MID, StepType.TERMINATED],
             default=StepType.TRUNCATED,
         )
-        return StateWithKey(raw_timestep, rng_key), TimeStep(
+        return AdapterStateWithKey(raw_timestep, rng_key), TimeStep(
             step_type=step_type,
             reward=raw_timestep.reward.astype(jnp.float32),
             discount=raw_timestep.discount.astype(jnp.float32),

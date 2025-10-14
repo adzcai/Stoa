@@ -15,7 +15,7 @@ from stoa.spaces import ArraySpace, BoundedArraySpace, DictSpace, DiscreteSpace,
 
 
 def gymnax_space_to_stoa_space(
-    space: Union[gymnax_spaces.Discrete, gymnax_spaces.Box, gymnax_spaces.Dict]
+    space: Union[gymnax_spaces.Discrete, gymnax_spaces.Box, gymnax_spaces.Dict],
 ) -> Space:
     """Converts Gymnax spaces to stoa spaces."""
     if isinstance(space, gymnax_spaces.Discrete):

@@ -4,14 +4,13 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from chex import Array, PRNGKey
-
 from stoa.core_wrappers.wrapper import Wrapper
-from stoa.env_types import Action, EnvParams, State, TimeStep
+from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import BoundedArraySpace, DiscreteSpace, MultiDiscreteSpace, Space
 
 
-class MultiDiscreteToDiscreteWrapper(Wrapper[State]):
+class MultiDiscreteToDiscreteWrapper(Wrapper[State, Observation, Action]):
     """Converts multi-discrete action spaces to single discrete action spaces.
 
     This wrapper takes environments with multi-discrete action spaces (where each
@@ -100,9 +99,7 @@ class MultiDiscreteToDiscreteWrapper(Wrapper[State]):
 
         return flat_action
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         """Reset the environment.
 
         Args:
@@ -154,7 +151,7 @@ class MultiDiscreteToDiscreteWrapper(Wrapper[State]):
         )
 
 
-class MultiBoundedToBoundedWrapper(Wrapper[State]):
+class MultiBoundedToBoundedWrapper(Wrapper[State, Observation, Action]):
     """Flattens multi-dimensional bounded action spaces to 1D bounded action spaces.
 
     This wrapper takes environments with multi-dimensional continuous action spaces
@@ -222,9 +219,7 @@ class MultiBoundedToBoundedWrapper(Wrapper[State]):
             bounds,
         )
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         """Reset the environment.
 
         Args:

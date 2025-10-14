@@ -2,13 +2,12 @@ from typing import Optional, Tuple
 
 import jax
 from chex import PRNGKey
-
 from stoa.core_wrappers.wrapper import Wrapper
-from stoa.env_types import Action, EnvParams, State, TimeStep
+from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
 
 
-class VmapWrapper(Wrapper[State]):
+class VmapWrapper(Wrapper[State, Observation, Action]):
     """
     Wrapper that vectorizes environment operations using JAX's vmap.
     """
@@ -58,9 +57,7 @@ class VmapWrapper(Wrapper[State]):
             out_axes=(0, 0),
         )
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         """
         Reset all parallel environments.
         """

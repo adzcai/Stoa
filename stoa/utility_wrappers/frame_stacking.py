@@ -2,9 +2,8 @@ from typing import Optional, Tuple
 
 import jax.numpy as jnp
 from chex import Array, PRNGKey, Shape
-
 from stoa.core_wrappers.wrapper import Wrapper, WrapperState, wrapper_state_replace
-from stoa.env_types import Action, EnvParams, TimeStep
+from stoa.env_types import Action, EnvParams, Observation, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import ArraySpace, BoundedArraySpace, Space
 from stoa.stoa_struct import dataclass
@@ -73,7 +72,7 @@ class FrameStacker:
             return stacked_frames.reshape(new_shape)
 
 
-class FrameStackingWrapper(Wrapper[FrameStackState]):
+class FrameStackingWrapper(Wrapper[FrameStackState, Observation, Action]):
     """Wrapper that stacks observations along a new final axis.
 
     This wrapper maintains a rolling buffer of the last N observations,

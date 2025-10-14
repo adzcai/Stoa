@@ -15,7 +15,7 @@ from stoa.spaces import MultiDiscreteSpace, Space
 
 
 def kinetix_space_to_stoa_space(
-    space: Union[gymnax_spaces.Discrete, gymnax_spaces.Box, gymnax_spaces.Dict, MultiDiscrete]
+    space: Union[gymnax_spaces.Discrete, gymnax_spaces.Box, gymnax_spaces.Dict, MultiDiscrete],
 ) -> Space:
     if isinstance(space, MultiDiscrete):
         return MultiDiscreteSpace(num_values=jnp.array(space.n))

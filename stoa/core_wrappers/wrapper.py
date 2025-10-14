@@ -1,10 +1,10 @@
 import dataclasses
-from typing import Any, Generic, Optional, Tuple, TypeVar
+from typing import Any, Generic, Optional, Tuple
 
 import jax
 from chex import PRNGKey
 
-from stoa.env_types import Action, EnvParams, State, TimeStep
+from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import BoundedArraySpace, EnvironmentSpace, Space
 from stoa.stoa_struct import dataclass
@@ -35,7 +35,7 @@ def wrapper_state_replace(self: "WrapperState", **changes: Any) -> "WrapperState
 
 
 @dataclass(custom_replace_fn=wrapper_state_replace)
-class WrapperState:
+class WrapperState(Generic[State]):
     """Base state class for environment wrappers."""
 
     base_env_state: Any
@@ -68,7 +68,7 @@ class WrapperState:
         return current_state
 
     @property
-    def unwrapped_state(self) -> Any:
+    def unwrapped_state(self) -> State:
         """Get the deepest non-wrapper state."""
         current = self.base_env_state
         while isinstance(current, WrapperState):
@@ -83,10 +83,7 @@ class WrapperState:
         return 1
 
 
-S = TypeVar("S", bound="State")
-
-
-class Wrapper(Environment, Generic[S]):
+class Wrapper(Environment, Generic[State, Observation, Action]):
     """
     Base class for stoa environment wrappers.
 
@@ -136,7 +133,9 @@ class Wrapper(Environment, Generic[S]):
         """
         return self._env.unwrapped
 
-    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[S, TimeStep]:
+    def reset(
+        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
+    ) -> Tuple[State, TimeStep[Observation]]:
         """
         Reset the environment.
 
@@ -151,10 +150,10 @@ class Wrapper(Environment, Generic[S]):
 
     def step(
         self,
-        state: S,
+        state: State,
         action: Action,
         env_params: Optional[EnvParams] = None,
-    ) -> Tuple[S, TimeStep]:
+    ) -> Tuple[State, TimeStep]:
         """
         Take a step in the environment.
 
@@ -186,7 +185,7 @@ class Wrapper(Environment, Generic[S]):
     def environment_space(self, env_params: Optional[EnvParams] = None) -> EnvironmentSpace:
         return self._env.environment_space(env_params)
 
-    def render(self, state: S, env_params: Optional[EnvParams] = None) -> Any:
+    def render(self, state: State, env_params: Optional[EnvParams] = None) -> Any:
         return self._env.render(state.base_env_state, env_params)
 
     def close(self) -> None:
@@ -202,7 +201,7 @@ class StateWithKey(WrapperState):
     rng_key: PRNGKey
 
 
-class AddRNGKey(Wrapper[StateWithKey]):
+class AddRNGKey(Wrapper[StateWithKey, Observation, Action]):
     """
     Wrapper that adds a JAX PRNG key to the environment state.
 

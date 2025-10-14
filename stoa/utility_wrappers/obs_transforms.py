@@ -4,7 +4,6 @@ import jax
 import jax.numpy as jnp
 from chex import PRNGKey
 from jax import Array
-
 from stoa.core_wrappers.wrapper import Wrapper, WrapperState, wrapper_state_replace
 from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
@@ -12,7 +11,7 @@ from stoa.spaces import ArraySpace, BoundedArraySpace, DictSpace, DiscreteSpace,
 from stoa.stoa_struct import dataclass
 
 
-class AddStartFlagAndPrevAction(Wrapper[State]):
+class AddStartFlagAndPrevAction(Wrapper[State, Observation, Action]):
     """Wrapper that adds a start flag and the previous action to the observation.
 
     This wrapper modifies the observation to include:
@@ -63,9 +62,7 @@ class AddStartFlagAndPrevAction(Wrapper[State]):
         else:
             raise ValueError(f"Unsupported action space type: {type(orig_action_space)}")
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         """Reset the environment and initialize the wrapper state.
 
         Args:
@@ -142,7 +139,7 @@ class AddStartFlagAndPrevAction(Wrapper[State]):
         return type(orig_obs_space)(shape=(new_obs_dim,), dtype=dtype, name=orig_obs_space.name)  # type: ignore
 
 
-class MakeChannelLast(Wrapper[State]):
+class MakeChannelLast(Wrapper[State, Observation, Action]):
     """Simple wrapper for observations that have the channel dim first.
     This makes the channel dim last.
 
@@ -203,9 +200,7 @@ class MakeChannelLast(Wrapper[State]):
             observation=new_observation,
         )
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         """Reset the environment and transform observations.
 
         Args:
@@ -258,13 +253,13 @@ class MakeChannelLast(Wrapper[State]):
 
 
 @dataclass(custom_replace_fn=wrapper_state_replace)
-class StepCountState(WrapperState):
+class StepCountState(WrapperState[State]):
     """State for tracking episode step count."""
 
     step_count: Array
 
 
-class AddStepCountWrapper(Wrapper[StepCountState]):
+class AddStepCountWrapper(Wrapper[StepCountState, Observation, Action]):
     """
     Wrapper that adds step count to observations or timestep extras.
 
@@ -358,7 +353,7 @@ class AddStepCountWrapper(Wrapper[StepCountState]):
             return DictSpace(spaces=spaces)
 
 
-class AddActionMaskWrapper(Wrapper[State]):
+class AddActionMaskWrapper(Wrapper[State, Observation, Action]):
     """
     Wrapper that adds action mask to observations as a dictionary.
 
@@ -406,9 +401,7 @@ class AddActionMaskWrapper(Wrapper[State]):
             "action_mask": action_mask,
         }
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         """Reset the environment and add action mask."""
         state, timestep = self._env.reset(rng_key, env_params)
         dict_obs = self._create_dict_obs(timestep)
@@ -437,7 +430,7 @@ class AddActionMaskWrapper(Wrapper[State]):
         return DictSpace(spaces=spaces)
 
 
-class ObservationTypeWrapper(Wrapper[State]):
+class ObservationTypeWrapper(Wrapper[State, Observation, Action]):
     """
     Wrapper that converts dict observations to a user-specified type.
 
@@ -471,9 +464,7 @@ class ObservationTypeWrapper(Wrapper[State]):
         """Convert dict observation to the target type."""
         return self._observation_type(**dict_obs)
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None
-    ) -> Tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: Optional[EnvParams] = None) -> Tuple[State, TimeStep]:
         """Reset the environment and convert observation type."""
         state, timestep = self._env.reset(rng_key, env_params)
         typed_obs = self._convert_observation(timestep.observation)

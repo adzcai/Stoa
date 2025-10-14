@@ -5,12 +5,12 @@ import jax.numpy as jnp
 from chex import PRNGKey
 
 from stoa.core_wrappers.wrapper import Wrapper
-from stoa.env_types import Action, EnvParams, StepType, TimeStep
+from stoa.env_types import Action, EnvParams, Observation, StepType, TimeStep
 from stoa.environment import Environment
 from stoa.utility_wrappers.obs_transforms import StepCountState
 
 
-class EpisodeStepLimitWrapper(Wrapper[StepCountState]):
+class EpisodeStepLimitWrapper(Wrapper[StepCountState, Observation, Action]):
     """
     Wrapper that enforces a maximum number of steps per episode.
 

@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Optional, Tuple
 import jax
 import jax.numpy as jnp
 from chex import Array, PRNGKey
+
 from stoa.env_types import Action, EnvParams, StepType, TimeStep
 from stoa.environment import Environment
 from stoa.spaces import ArraySpace, DiscreteSpace, Space

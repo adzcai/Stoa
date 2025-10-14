@@ -1,20 +1,32 @@
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import field
-from typing import TYPE_CHECKING, Dict, TypeAlias
+from typing import TYPE_CHECKING, Dict, Generic, Protocol, TypeAlias, TypeVar
 
 import jax.numpy as jnp
-from chex import ArrayTree
-from jax import Array
+from jaxtyping import Array, Bool, Float32, UInt32
 
 if TYPE_CHECKING:  # https://github.com/python/mypy/issues/6239
     from dataclasses import dataclass
 else:
     from flax.struct import dataclass
 
-State: TypeAlias = ArrayTree
-Reward: TypeAlias = Array
-Discount: TypeAlias = Array
-Observation: TypeAlias = ArrayTree
-Action: TypeAlias = ArrayTree
+
+Leaf = TypeVar("Leaf", covariant=True)
+
+
+class DataClassLike(Protocol[Leaf]):
+    def __getattribute__(self, name: str, /) -> "PyTree[Leaf]": ...
+
+
+PyTree: TypeAlias = Leaf | Collection[Leaf] | Mapping[str, Leaf] | DataClassLike[Leaf]
+ArrayTree = PyTree[Array]
+State = TypeVar("S", bound=ArrayTree)
+Observation = TypeVar("O", bound=ArrayTree)
+Action = TypeVar("A", bound=ArrayTree)
+Reward: TypeAlias = Float32[Array, "..."]
+Discount: TypeAlias = Float32[Array, "..."]
+Done: TypeAlias = Bool[Array, "..."]
+DiscreteAction: TypeAlias = UInt32[Array, "..."]
 TimeStepExtras: TypeAlias = Dict[str, ArrayTree]
 EnvParams: TypeAlias = ArrayTree
 ActionMask: TypeAlias = ArrayTree
@@ -35,7 +47,7 @@ class StepType(jnp.int8):
 
 
 @dataclass
-class TimeStep:
+class TimeStep(Generic[Observation]):
     step_type: StepType
     reward: Reward
     discount: Discount
@@ -61,3 +73,6 @@ class TimeStep:
 
     def done(self) -> Array:
         return self.last()
+
+
+EnvironmentStep = Callable[[State, Action], tuple[State, TimeStep]]

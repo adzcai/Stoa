@@ -3,14 +3,13 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 from chex import PRNGKey
-
 from stoa.core_wrappers.auto_reset import add_obs_to_extras
 from stoa.core_wrappers.wrapper import Wrapper
-from stoa.env_types import Action, EnvParams, State, TimeStep
+from stoa.env_types import Action, EnvParams, Observation, State, TimeStep
 from stoa.environment import Environment
 
 
-class OptimisticResetVmapWrapper(Wrapper[State]):
+class OptimisticResetVmapWrapper(Wrapper[State, Observation, Action]):
     """
     Efficient vectorized environment wrapper with optimistic resets.
 
@@ -47,9 +46,7 @@ class OptimisticResetVmapWrapper(Wrapper[State]):
         self._vmap_step = jax.vmap(env.step, in_axes=(0, 0, None))
         self.keep_terminal = keep_terminal
 
-    def reset(
-        self, rng_key: PRNGKey, env_params: EnvParams | None = None
-    ) -> tuple[State, TimeStep]:
+    def reset(self, rng_key: PRNGKey, env_params: EnvParams | None = None) -> tuple[State, TimeStep]:
         if rng_key.ndim == 1 if rng_key.dtype == jnp.uint32 else rng_key.ndim == 0:
             rng_key = jax.random.split(rng_key, self.num_envs)
         states, timesteps = self._vmap_reset(rng_key, env_params)
@@ -59,9 +56,7 @@ class OptimisticResetVmapWrapper(Wrapper[State]):
             timesteps = add_obs_to_extras(timesteps)
         return states, timesteps
 
-    def step(
-        self, state: State, action: Action, env_params: EnvParams | None = None
-    ) -> tuple[State, TimeStep]:
+    def step(self, state: State, action: Action, env_params: EnvParams | None = None) -> tuple[State, TimeStep]:
         if self.keep_terminal:
             env_states, dones = state
         else:

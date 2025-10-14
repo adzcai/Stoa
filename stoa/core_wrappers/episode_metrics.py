@@ -7,7 +7,7 @@ from chex import Numeric, PRNGKey
 from jax import Array
 
 from stoa.core_wrappers.wrapper import Wrapper, WrapperState, wrapper_state_replace
-from stoa.env_types import Action, EnvParams, TimeStep
+from stoa.env_types import Action, EnvParams, Observation, TimeStep
 from stoa.stoa_struct import dataclass
 
 
@@ -23,7 +23,7 @@ class RecordEpisodeMetricsState(WrapperState):
     episode_length: Numeric
 
 
-class RecordEpisodeMetrics(Wrapper[RecordEpisodeMetricsState]):
+class RecordEpisodeMetrics(Wrapper[RecordEpisodeMetricsState, Observation, Action]):
     """
     A wrapper that records episode returns and lengths for each episode.
 

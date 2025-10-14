@@ -121,6 +121,7 @@ dependencies = [
     "flax>=0.10.5",
     "jax>=0.4.25",
     "jaxlib>=0.5.3",
+    "jaxtyping>=0.3.3",
     "numpy>=1.26.4",
 ]
 
@@ -143,6 +144,12 @@ all = [
     "stoa-env[xminigrid]",
     "stoa-env[jaxmaze]",
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/EdanToledo/Stoa"
+"Bug Tracker" = "https://github.com/EdanToledo/Stoa/issues"
+
+[dependency-groups]
 dev = [
     "black",
     "coverage",
@@ -170,7 +177,3 @@ dev = [
     "pytype",
     "testfixtures",
 ]
-
-[project.urls]
-"Homepage" = "https://github.com/EdanToledo/Stoa"
-"Bug Tracker" = "https://github.com/EdanToledo/Stoa/issues"
